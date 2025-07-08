@@ -3,7 +3,7 @@
 
 TODAY=$(date +%Y-%m-%d)
 MONTH=$(date +%Y-%m)
-LOG_FILE="./logs/$MONTH.md"
+LOG_FILE="../logs/$MONTH.md"
 
 # 如果月度文件不存在，创建它
 if [ ! -f "$LOG_FILE" ]; then
