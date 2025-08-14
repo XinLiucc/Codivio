@@ -105,3 +105,17 @@ Thumbs.db
 # Build
 dist/
 build/
+
+# Docker volumes data
+mysql_data/
+redis_data/
+rabbitmq_data/
+
+# Environment files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Database data
+data/
