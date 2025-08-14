@@ -1,0 +1,21 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: user-service
+
+# 日志配置
+logging:
+  level:
+    com.codivio.userservice: INFO
+
+# Actuator 监控
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
