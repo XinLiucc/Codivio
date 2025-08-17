@@ -60,6 +60,21 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
 
+  # 网关服务
+  gateway-service:
+    build: 
+      context: ./backend/gateway-service
+      dockerfile: Dockerfile
+    container_name: codivio-gateway-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - user-service
+    networks:
+      - codivio-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
   # Nginx 负载均衡
   nginx:
     image: nginx:alpine
