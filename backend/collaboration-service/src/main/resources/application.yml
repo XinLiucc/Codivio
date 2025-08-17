@@ -1,0 +1,21 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: collaboration-service
+
+# 日志配置
+logging:
+  level:
+    com.codivio.collaboration: INFO
+
+# Actuator 监控
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

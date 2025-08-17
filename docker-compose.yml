@@ -71,6 +71,7 @@ services:
     depends_on:
       - user-service
       - project-service
+      - collaboration-service
     networks:
       - codivio-network
     environment:
@@ -87,6 +88,23 @@ services:
     depends_on:
       - mysql
       - redis
+    networks:
+      - codivio-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  # 协作服务
+  collaboration-service:
+    build: 
+      context: ./backend/collaboration-service
+      dockerfile: Dockerfile
+    container_name: codivio-collaboration-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - mysql
+      - redis
+      - rabbitmq
     networks:
       - codivio-network
     environment:
