@@ -10,9 +10,6 @@ COPY pom.xml .
 # 复制源代码
 COPY src ./src
 
-# 复制 Maven Wrapper（如果有的话）
-COPY mvnw .
-COPY .mvn ./.mvn
 
 # 安装 Maven（如果镜像中没有）
 RUN apt-get update && apt-get install -y maven
