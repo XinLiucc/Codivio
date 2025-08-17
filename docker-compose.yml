@@ -72,6 +72,7 @@ services:
       - user-service
       - project-service
       - collaboration-service
+      - file-service
     networks:
       - codivio-network
     environment:
@@ -109,6 +110,24 @@ services:
       - codivio-network
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+
+  # 文件服务
+  file-service:
+    build: 
+      context: ./backend/file-service
+      dockerfile: Dockerfile
+    container_name: codivio-file-service
+    ports:
+      - "8084:8084"
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - codivio-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    volumes:
+      - ./data/files:/app/files
 
   # Nginx 负载均衡
   nginx:
