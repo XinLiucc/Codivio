@@ -1,0 +1,18 @@
+{
+  "name": "codivio-frontend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Codivio 前端框架",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.3.11"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.5.2",
+    "vite": "^5.0.10"
+  }
+}
