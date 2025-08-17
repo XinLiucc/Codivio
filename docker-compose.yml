@@ -136,7 +136,7 @@ services:
       dockerfile: Dockerfile
     container_name: codivio-frontend
     ports:
-      - "80:80"
+      - "8090:80"
     depends_on:
       - gateway-service
     networks:
