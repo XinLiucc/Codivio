@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class HealthController {
 
-    @GetMapping("/api/file/health")
+    @GetMapping("/api/v1/files/health")
     public String health() {
         return "File Service is running!";
     }

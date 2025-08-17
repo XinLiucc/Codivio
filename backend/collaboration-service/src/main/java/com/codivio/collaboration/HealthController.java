@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class HealthController {
 
-    @GetMapping("/api/collaboration/health")
+    @GetMapping("/api/v1/collaboration/health")
     public String health() {
         return "Collaboration Service is running!";
     }
