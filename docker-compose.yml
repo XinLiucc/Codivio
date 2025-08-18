@@ -7,13 +7,13 @@ services:
     container_name: codivio-mysql
     environment:
       MYSQL_ROOT_PASSWORD: codivio123
-      MYSQL_DATABASE: codivio_user
+      # 注意：初始化脚本会创建多个数据库，这里不指定MYSQL_DATABASE
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./docker/mysql/init:/docker-entrypoint-initdb.d
-    command: --default-authentication-plugin=mysql_native_password
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     networks:
       - codivio-network
 
