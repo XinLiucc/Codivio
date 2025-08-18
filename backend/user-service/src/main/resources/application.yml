@@ -29,6 +29,12 @@ spring:
       hibernate:
         format_sql: true
 
+# JWT配置
+jwt:
+  secret: codivio-jwt-secret-key-2025-very-long-and-secure-string
+  expiration: 86400  # 24小时（秒）
+  issuer: codivio-user-service
+
 # 日志配置
 logging:
   level:
