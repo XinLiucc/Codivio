@@ -4,6 +4,31 @@ server:
 spring:
   application:
     name: user-service
+  
+  # 数据源配置 - 开发环境默认配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/codivio_user?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: codivio
+    password: codivio123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+    # HikariCP连接池配置
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+  
+  # JPA配置
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
 
 # 日志配置
 logging:
