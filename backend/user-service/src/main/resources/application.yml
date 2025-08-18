@@ -22,7 +22,6 @@ spring:
   
   # JPA配置
   jpa:
-    database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
       ddl-auto: validate
     show-sql: false
