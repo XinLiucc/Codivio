@@ -52,19 +52,21 @@ CREATE TABLE project_members (
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 ) COMMENT '项目成员表';
 
--- 项目文件表
-CREATE TABLE project_files (
+-- 项目文件树结构表
+CREATE TABLE project_file_tree (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     project_id VARCHAR(32) NOT NULL COMMENT '项目ID',
     
-    -- 文件信息
+    -- 文件树结构信息
     file_path VARCHAR(500) NOT NULL COMMENT '文件路径',
     file_name VARCHAR(255) NOT NULL COMMENT '文件名',
-    content LONGTEXT COMMENT '文件内容',
-    size INT DEFAULT 0 COMMENT '文件大小(字节)',
+    parent_path VARCHAR(500) COMMENT '父级路径',
     
     -- 文件类型
     type ENUM('file', 'directory') DEFAULT 'file' COMMENT '类型',
+    
+    -- 关联信息
+    file_id VARCHAR(32) COMMENT '关联的文件服务ID（仅file类型）',
     
     -- 编辑信息
     last_editor_id BIGINT COMMENT '最后编辑者ID',
@@ -76,7 +78,9 @@ CREATE TABLE project_files (
     
     UNIQUE KEY unique_file (project_id, file_path),
     INDEX idx_project_id (project_id),
+    INDEX idx_parent_path (project_id, parent_path),
     INDEX idx_type (type),
+    INDEX idx_file_id (file_id),
     INDEX idx_updated_at (updated_at),
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-) COMMENT '项目文件表';
+) COMMENT '项目文件树结构表';
