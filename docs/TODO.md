@@ -20,9 +20,9 @@
 
 - [x] **基础用户API实现** ✅ 2025-08-19 完成
   - [x] 实现用户注册API (POST /api/v1/auth/register) ✅
+  - [x] 实现用户登录API (POST /api/v1/auth/login) ✅ 2025-08-19 晚间
   - [x] 添加统一响应格式封装 (ResultVO) ✅
   - [x] 实现用户名邮箱检查API ✅
-  - [ ] 实现用户登录API (POST /api/v1/auth/login)
   - [ ] 实现用户信息查询API (GET /api/v1/users/profile)
   - [ ] 实现用户信息更新API (PUT /api/v1/users/profile)
 
@@ -142,8 +142,8 @@
 - ✅ Docker环境搭建完成
 - ✅ 基础项目结构完成
 - ✅ 数据层实现: 100% (User实体+Repository完成)
-- ✅ 认证系统: 80% (JWT工具+密码加密完成，缺SecurityFilter)
-- ✅ 业务API: 60% (用户注册API完成，缺登录/查询/更新API)
+- ✅ 认证系统: 85% (JWT工具+密码加密+登录验证完成，缺SecurityFilter)
+- ✅ 业务API: 80% (注册+登录API完成，缺查询/更新API)
 
 ### 里程碑目标
 - **第1周**: 完成用户服务基础功能(注册/登录/JWT)
@@ -166,7 +166,7 @@
 
 ## 🎉 最新完成功能 (2025-08-19)
 
-### 用户注册系统 ✅
+### 用户注册系统 ✅ (白天完成)
 - **ResultVO统一响应格式**: 泛型支持，统一success/error处理
 - **UserRegisterDTO请求验证**: Bean Validation注解完整覆盖  
 - **SecurityConfig密码加密**: BCrypt加密配置
@@ -175,13 +175,27 @@
 - **Maven配置优化**: 解决Jackson冲突+参数名保留
 - **JPA配置调整**: ddl-auto改为update模式
 
+### 用户登录系统 ✅ (晚间完成)
+- **UserLoginDTO登录请求**: 灵活的loginId字段(支持用户名/邮箱登录)
+- **LoginResponseDTO登录响应**: 包含JWT token、用户信息、过期时间
+- **登录业务逻辑**: findByUsernameOrEmail OR查询优化、BCrypt密码验证
+- **JWT工具增强**: 添加getExpiration()方法支持过期时间返回
+- **登录API接口**: POST /api/v1/auth/login，完整的验证和异常处理
+- **安全处理**: 敏感信息过滤、readOnly事务优化
+
+### 功能测试验证 ✅
+- **测试账号**: testuser / test@example.com / password123
+- **登录测试**: 用户名登录 ✅、邮箱登录 ✅、错误处理 ✅
+- **JWT Token**: 24小时有效期，完整的用户信息返回
+
 ### 技术问题解决记录 ✅
 1. **Jackson依赖冲突** → 添加显式jackson-databind依赖
 2. **JPA验证错误** → ddl-auto从validate改为update  
 3. **@PathVariable参数识别** → maven-compiler-plugin配置parameters=true
 4. **Bean Validation引用错误** → 添加spring-boot-starter-validation依赖
+5. **JwtUtil缺少方法** → 添加getExpiration()方法
 
 ### 下个阶段重点 🎯
-1. **用户登录API**: 密码验证+JWT token生成
-2. **Spring Security完整配置**: SecurityFilterChain + JwtAuthenticationFilter
-3. **用户信息管理**: 查询和更新API实现
+1. **Spring Security完整配置**: SecurityFilterChain + JwtAuthenticationFilter
+2. **用户信息管理**: 查询和更新API实现  
+3. **全局异常处理**: @ControllerAdvice统一异常处理器
