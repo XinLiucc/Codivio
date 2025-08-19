@@ -1,6 +1,8 @@
 package com.codivio.userservice.controller;
 
+import com.codivio.userservice.dto.LoginResponseDTO;
 import com.codivio.userservice.dto.ResultVO;
+import com.codivio.userservice.dto.UserLoginDTO;
 import com.codivio.userservice.dto.UserRegisterDTO;
 import com.codivio.userservice.entity.User;
 import com.codivio.userservice.service.UserService;
@@ -66,6 +68,22 @@ public class UserController {
             return ResultVO.success(!exists); // true表示可用
         } catch (Exception e) {
             return ResultVO.error("检查邮箱失败");
+        }
+    }
+    
+    /**
+     * 用户登录
+     * 
+     * @param loginDTO 登录请求数据
+     * @return 登录结果（包含JWT Token和用户信息）
+     */
+    @PostMapping("/login")
+    public ResultVO<LoginResponseDTO> login(@Valid @RequestBody UserLoginDTO loginDTO) {
+        try {
+            LoginResponseDTO loginResponse = userService.login(loginDTO);
+            return ResultVO.success(loginResponse);
+        } catch (RuntimeException e) {
+            return ResultVO.error(e.getMessage());
         }
     }
 }
