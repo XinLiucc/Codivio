@@ -1,5 +1,7 @@
 package com.codivio.userservice.service;
 
+import com.codivio.userservice.dto.LoginResponseDTO;
+import com.codivio.userservice.dto.UserLoginDTO;
 import com.codivio.userservice.dto.UserRegisterDTO;
 import com.codivio.userservice.entity.User;
 
@@ -40,4 +42,20 @@ public interface UserService {
      * @return true-已存在, false-不存在
      */
     boolean existsByEmail(String email);
+    
+    /**
+     * 用户登录
+     * 
+     * 业务逻辑：
+     * 1. 根据loginId查找用户（支持用户名或邮箱）
+     * 2. 验证用户是否存在
+     * 3. 验证密码是否正确
+     * 4. 生成JWT Token
+     * 5. 返回Token和用户信息
+     * 
+     * @param loginDTO 登录数据 (已通过DTO格式验证)
+     * @return 登录响应信息（包含token和用户信息）
+     * @throws RuntimeException 当登录失败时抛出异常
+     */
+    LoginResponseDTO login(UserLoginDTO loginDTO);
 }

@@ -210,4 +210,13 @@ public class JwtUtil {
             return null;
         }
     }
+    
+    /**
+     * 获取JWT过期时间（秒）
+     * 
+     * @return JWT过期时间
+     */
+    public Long getExpiration() {
+        return expiration;
+    }
 }

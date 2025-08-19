@@ -1,13 +1,17 @@
 package com.codivio.userservice.service.impl;
 
+import com.codivio.userservice.dto.LoginResponseDTO;
+import com.codivio.userservice.dto.UserLoginDTO;
 import com.codivio.userservice.dto.UserRegisterDTO;
 import com.codivio.userservice.entity.User;
 import com.codivio.userservice.repository.UserRepository;
 import com.codivio.userservice.service.UserService;
+import com.codivio.userservice.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.Optional;
 
 /**
  * 用户服务实现类
@@ -21,6 +25,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private JwtUtil jwtUtil;
     
     /**
      * 用户注册
@@ -75,5 +82,47 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
+    }
+    
+    /**
+     * 用户登录
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public LoginResponseDTO login(UserLoginDTO loginDTO) {
+        // 1. 根据loginId查找用户（支持用户名或邮箱）
+        Optional<User> userOptional = userRepository.findByUsernameOrEmail(
+            loginDTO.getLoginId(), 
+            loginDTO.getLoginId()
+        );
+        
+        // 2. 验证用户是否存在
+        if (!userOptional.isPresent()) {
+            throw new RuntimeException("用户名或邮箱不存在");
+        }
+        
+        User user = userOptional.get();
+        
+        // 3. 验证密码是否正确
+        if (!passwordEncoder.matches(loginDTO.getPassword(), user.getPasswordHash())) {
+            throw new RuntimeException("密码错误");
+        }
+        
+        // 4. 生成JWT Token
+        String token = jwtUtil.generateToken(user.getId(), user.getUsername());
+        
+        // 5. 清空敏感信息，准备返回给前端
+        User safeUser = new User();
+        safeUser.setId(user.getId());
+        safeUser.setUsername(user.getUsername());
+        safeUser.setEmail(user.getEmail());
+        safeUser.setNickname(user.getNickname());
+        safeUser.setStatus(user.getStatus());
+        safeUser.setCreatedAt(user.getCreatedAt());
+        safeUser.setUpdatedAt(user.getUpdatedAt());
+        // 注意：不设置passwordHash
+        
+        // 6. 构造登录响应
+        return new LoginResponseDTO(token, safeUser, jwtUtil.getExpiration());
     }
 }
