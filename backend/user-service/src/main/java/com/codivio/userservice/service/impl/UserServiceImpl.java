@@ -125,4 +125,31 @@ public class UserServiceImpl implements UserService {
         // 6. 构造登录响应
         return new LoginResponseDTO(token, safeUser, jwtUtil.getExpiration());
     }
+
+    /**
+     * 根据用户ID查询用户信息
+     * 
+     * @param userId 用户ID
+     * @return 用户信息（已过滤敏感信息）
+     * @throws RuntimeException 当用户不存在时抛出异常
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public User getUserById(Long userId) {
+        // 1. 根据ID查询用户，JPA返回Optional避免空指针异常
+        Optional<User> userOptional = userRepository.findById(userId);
+        
+        // 2. 检查用户是否存在
+        if (userOptional.isEmpty()) {  // 使用isEmpty()更现代的写法
+            throw new RuntimeException("用户不存在");
+        }
+        
+        // 3. 获取用户对象
+        User user = userOptional.get();
+        
+        // 4. 过滤敏感信息：清空密码哈希，确保不返回给前端
+        user.setPasswordHash(null);
+        
+        return user;
+    }
 }

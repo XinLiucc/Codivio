@@ -58,4 +58,13 @@ public interface UserService {
      * @throws RuntimeException 当登录失败时抛出异常
      */
     LoginResponseDTO login(UserLoginDTO loginDTO);
+    
+    /**
+     * 根据用户ID查询用户信息
+     * 
+     * @param userId 用户ID
+     * @return 用户信息（已过滤敏感信息）
+     * @throws RuntimeException 当用户不存在时抛出异常
+     */
+    User getUserById(Long userId);
 }
