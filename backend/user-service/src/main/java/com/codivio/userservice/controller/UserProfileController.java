@@ -1,14 +1,14 @@
 package com.codivio.userservice.controller;
 
 import com.codivio.userservice.dto.ResultVO;
+import com.codivio.userservice.dto.UserUpdateDTO;
 import com.codivio.userservice.entity.User;
 import com.codivio.userservice.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 用户信息管理控制器
@@ -94,6 +94,80 @@ public class UserProfileController {
         } catch (RuntimeException e) {
             // 5. 异常处理：返回友好的错误信息
             // 可能的异常：用户不存在、数据库连接异常等
+            return ResultVO.error(e.getMessage());
+        }
+    }
+
+    /**
+     * 更新当前用户信息
+     * 
+     * 接口说明：
+     * - URL: PUT /api/v1/users/profile
+     * - 需要JWT认证：通过Authorization header传递Bearer token
+     * - 支持部分更新：只更新请求中提供的字段
+     * - 返回更新后的用户信息（已过滤敏感信息）
+     * 
+     * 支持更新的字段：
+     * - email: 邮箱地址（会验证格式和唯一性）
+     * - nickname: 用户昵称（1-50字符）
+     * - avatarUrl: 头像URL（可为空）
+     * 
+     * 实现原理：
+     * 1. Spring Security已验证JWT token并设置认证上下文
+     * 2. 从认证上下文获取当前用户ID
+     * 3. 调用Service层进行业务验证和数据更新
+     * 4. 返回更新后的用户信息
+     * 
+     * 安全保证：
+     * - 用户只能更新自己的信息
+     * - 邮箱唯一性验证
+     * - 敏感信息已过滤
+     * 
+     * @param userUpdateDTO 更新数据（经过Bean Validation验证）
+     * @return 更新后的用户信息
+     * 
+     * 请求示例：
+     * {
+     *   "email": "newemail@example.com",
+     *   "nickname": "New Nickname"
+     * }
+     * 
+     * 响应示例：
+     * {
+     *   "code": 200,
+     *   "message": "操作成功",
+     *   "data": {
+     *     "id": 1,
+     *     "username": "testuser",
+     *     "email": "newemail@example.com",
+     *     "nickname": "New Nickname",
+     *     "status": 1,
+     *     "updatedAt": "2025-08-21T15:30:00"
+     *   },
+     *   "timestamp": 1640995200000
+     * }
+     */
+    @PutMapping("/profile")
+    public ResultVO<User> updateCurrentUserProfile(@Valid @RequestBody UserUpdateDTO userUpdateDTO) {
+        try {
+            // 1. 从Spring Security上下文获取认证信息
+            // JWT认证过滤器已验证token并设置用户认证状态
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            
+            // 2. 获取当前用户ID
+            // JwtAuthenticationFilter在验证token时将userId存储在details中
+            Long userId = (Long) authentication.getDetails();
+            
+            // 3. 调用Service层执行更新操作
+            // Service层会处理业务验证、邮箱唯一性检查、部分更新逻辑
+            User updatedUser = userService.updateUser(userId, userUpdateDTO);
+            
+            // 4. 返回更新后的用户信息
+            return ResultVO.success(updatedUser);
+            
+        } catch (RuntimeException e) {
+            // 5. 异常处理：返回友好的错误信息
+            // 可能的异常：用户不存在、邮箱重复、数据库异常等
             return ResultVO.error(e.getMessage());
         }
     }
