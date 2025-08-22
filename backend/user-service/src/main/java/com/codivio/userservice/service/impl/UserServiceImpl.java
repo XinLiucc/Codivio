@@ -3,6 +3,7 @@ package com.codivio.userservice.service.impl;
 import com.codivio.userservice.dto.LoginResponseDTO;
 import com.codivio.userservice.dto.UserLoginDTO;
 import com.codivio.userservice.dto.UserRegisterDTO;
+import com.codivio.userservice.dto.UserUpdateDTO;
 import com.codivio.userservice.entity.User;
 import com.codivio.userservice.repository.UserRepository;
 import com.codivio.userservice.service.UserService;
@@ -151,5 +152,58 @@ public class UserServiceImpl implements UserService {
         user.setPasswordHash(null);
         
         return user;
+    }
+
+    /**
+     * 更新用户信息
+     */
+    @Override
+    @Transactional
+    public User updateUser(Long userId, UserUpdateDTO userUpdateDTO) {
+        // 1. 查找用户并验证存在性
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isEmpty()) {  // 修正：应该是isEmpty()表示用户不存在
+            throw new RuntimeException("用户不存在");
+        }
+        
+        User user = userOptional.get();
+        
+        // 2. 验证并更新邮箱（如果提供）
+        if (userUpdateDTO.getEmail() != null && !userUpdateDTO.getEmail().trim().isEmpty()) {
+            String newEmail = userUpdateDTO.getEmail().trim();
+            // 检查新邮箱是否与当前邮箱不同，且是否已被其他用户使用
+            if (!newEmail.equals(user.getEmail()) && existsByEmail(newEmail)) {
+                throw new RuntimeException("邮箱已被其他用户占用");
+            }
+            user.setEmail(newEmail);
+        }
+        
+        // 3. 更新昵称（如果提供）
+        if (userUpdateDTO.getNickname() != null && !userUpdateDTO.getNickname().trim().isEmpty()) {
+            user.setNickname(userUpdateDTO.getNickname().trim());
+        }
+        
+        // 4. 更新头像URL（如果提供，允许设为空）
+        if (userUpdateDTO.getAvatarUrl() != null) {
+            user.setAvatarUrl(userUpdateDTO.getAvatarUrl().trim());
+        }
+        
+        // 5. 保存更新后的用户信息（updatedAt会自动更新）
+        User updatedUser = userRepository.save(user);
+        
+        // 6. 过滤敏感信息，确保不返回密码（但不影响数据库保存）
+        // 注意：创建新对象来返回，避免修改已保存的实体
+        User safeUser = new User();
+        safeUser.setId(updatedUser.getId());
+        safeUser.setUsername(updatedUser.getUsername());
+        safeUser.setEmail(updatedUser.getEmail());
+        safeUser.setNickname(updatedUser.getNickname());
+        safeUser.setAvatarUrl(updatedUser.getAvatarUrl());
+        safeUser.setStatus(updatedUser.getStatus());
+        safeUser.setCreatedAt(updatedUser.getCreatedAt());
+        safeUser.setUpdatedAt(updatedUser.getUpdatedAt());
+        // passwordHash保持null，不返回给前端
+        
+        return safeUser;
     }
 }
