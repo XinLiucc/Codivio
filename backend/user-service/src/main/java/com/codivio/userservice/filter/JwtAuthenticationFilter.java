@@ -91,12 +91,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         null,                   // 密码设为null（JWT认证不需要密码）
                         Collections.emptyList() // 权限列表（暂时为空，后续可扩展角色权限）
                 );
+        
+        // 7. 将userId存储到认证对象的details中，方便Controller直接获取
+        authToken.setDetails(userId);
 
-        // 7. 将认证信息设置到Spring Security上下文中
+        // 8. 将认证信息设置到Spring Security上下文中
         // 这告诉Spring Security："该用户已通过认证"
         SecurityContextHolder.getContext().setAuthentication(authToken);
 
-        // 8. 放行请求到下一个过滤器或最终的Controller
+        // 9. 放行请求到下一个过滤器或最终的Controller
         // 此时Spring Security会看到已认证状态，允许访问受保护的资源
         filterChain.doFilter(request, response);
     }

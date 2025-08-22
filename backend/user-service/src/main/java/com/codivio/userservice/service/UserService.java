@@ -3,6 +3,7 @@ package com.codivio.userservice.service;
 import com.codivio.userservice.dto.LoginResponseDTO;
 import com.codivio.userservice.dto.UserLoginDTO;
 import com.codivio.userservice.dto.UserRegisterDTO;
+import com.codivio.userservice.dto.UserUpdateDTO;
 import com.codivio.userservice.entity.User;
 
 /**
@@ -58,4 +59,35 @@ public interface UserService {
      * @throws RuntimeException 当登录失败时抛出异常
      */
     LoginResponseDTO login(UserLoginDTO loginDTO);
+    
+    /**
+     * 根据用户ID查询用户信息
+     * 
+     * @param userId 用户ID
+     * @return 用户信息（已过滤敏感信息）
+     * @throws RuntimeException 当用户不存在时抛出异常
+     */
+    User getUserById(Long userId);
+    
+    /**
+     * 更新用户信息
+     * 
+     * 业务逻辑：
+     * 1. 验证用户是否存在
+     * 2. 如果更新邮箱，检查新邮箱是否已被其他用户使用
+     * 3. 只更新非空字段（部分更新）
+     * 4. 自动更新updatedAt时间戳
+     * 5. 返回更新后的用户信息
+     * 
+     * 支持的更新字段：
+     * - email: 邮箱地址（需要验证唯一性）
+     * - nickname: 用户昵称
+     * - avatarUrl: 头像URL
+     * 
+     * @param userId 用户ID
+     * @param userUpdateDTO 更新数据（只包含需要更新的字段）
+     * @return 更新后的用户信息（已过滤敏感信息）
+     * @throws RuntimeException 当用户不存在或邮箱重复时抛出异常
+     */
+    User updateUser(Long userId, UserUpdateDTO userUpdateDTO);
 }
