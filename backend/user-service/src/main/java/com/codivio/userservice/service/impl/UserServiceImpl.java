@@ -5,6 +5,8 @@ import com.codivio.userservice.dto.UserLoginDTO;
 import com.codivio.userservice.dto.UserRegisterDTO;
 import com.codivio.userservice.dto.UserUpdateDTO;
 import com.codivio.userservice.entity.User;
+import com.codivio.userservice.exception.BaseBusinessException;
+import com.codivio.userservice.exception.ErrorCode;
 import com.codivio.userservice.repository.UserRepository;
 import com.codivio.userservice.service.UserService;
 import com.codivio.userservice.util.JwtUtil;
@@ -41,17 +43,17 @@ public class UserServiceImpl implements UserService {
     public User register(UserRegisterDTO registerDTO) {
         // 1. 验证密码与确认密码是否一致
         if (!registerDTO.getPassword().equals(registerDTO.getConfirmPassword())) {
-            throw new RuntimeException("密码与确认密码不一致");
+            throw new BaseBusinessException(ErrorCode.PASSWORD_MISMATCH);
         }
         
         // 2. 检查用户名是否已存在
         if (existsByUsername(registerDTO.getUsername())) {
-            throw new RuntimeException("用户名已存在");
+            throw new BaseBusinessException(ErrorCode.USERNAME_ALREADY_EXISTS);
         }
         
         // 3. 检查邮箱是否已存在
         if (existsByEmail(registerDTO.getEmail())) {
-            throw new RuntimeException("邮箱已存在");
+            throw new BaseBusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
         
         // 4. 加密密码
@@ -99,14 +101,14 @@ public class UserServiceImpl implements UserService {
         
         // 2. 验证用户是否存在
         if (!userOptional.isPresent()) {
-            throw new RuntimeException("用户名或邮箱不存在");
+            throw new BaseBusinessException(ErrorCode.USER_NOT_FOUND);
         }
         
         User user = userOptional.get();
         
         // 3. 验证密码是否正确
         if (!passwordEncoder.matches(loginDTO.getPassword(), user.getPasswordHash())) {
-            throw new RuntimeException("密码错误");
+            throw new BaseBusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
         
         // 4. 生成JWT Token
@@ -142,7 +144,7 @@ public class UserServiceImpl implements UserService {
         
         // 2. 检查用户是否存在
         if (userOptional.isEmpty()) {  // 使用isEmpty()更现代的写法
-            throw new RuntimeException("用户不存在");
+            throw new BaseBusinessException(ErrorCode.USER_NOT_FOUND);
         }
         
         // 3. 获取用户对象
@@ -163,7 +165,7 @@ public class UserServiceImpl implements UserService {
         // 1. 查找用户并验证存在性
         Optional<User> userOptional = userRepository.findById(userId);
         if (userOptional.isEmpty()) {  // 修正：应该是isEmpty()表示用户不存在
-            throw new RuntimeException("用户不存在");
+            throw new BaseBusinessException(ErrorCode.USER_NOT_FOUND);
         }
         
         User user = userOptional.get();
@@ -173,7 +175,7 @@ public class UserServiceImpl implements UserService {
             String newEmail = userUpdateDTO.getEmail().trim();
             // 检查新邮箱是否与当前邮箱不同，且是否已被其他用户使用
             if (!newEmail.equals(user.getEmail()) && existsByEmail(newEmail)) {
-                throw new RuntimeException("邮箱已被其他用户占用");
+                throw new BaseBusinessException(ErrorCode.EMAIL_ALREADY_USED);
             }
             user.setEmail(newEmail);
         }

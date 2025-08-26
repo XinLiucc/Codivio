@@ -75,27 +75,20 @@ public class UserProfileController {
      */
     @GetMapping("/profile")
     public ResultVO<User> getCurrentUserProfile() {
-        try {
-            // 1. 从Spring Security上下文获取认证信息
-            // 此时JWT已通过JwtAuthenticationFilter验证，用户已通过认证
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            
-            // 2. 获取当前用户ID
-            // JwtAuthenticationFilter在验证token时将userId存储在details中
-            Long userId = (Long) authentication.getDetails();
-            
-            // 3. 通过Service层查询用户信息
-            // Service层会过滤敏感信息（如密码）
-            User user = userService.getUserById(userId);
-            
-            // 4. 返回成功响应
-            return ResultVO.success(user);
-            
-        } catch (RuntimeException e) {
-            // 5. 异常处理：返回友好的错误信息
-            // 可能的异常：用户不存在、数据库连接异常等
-            return ResultVO.error(e.getMessage());
-        }
+        // 1. 从Spring Security上下文获取认证信息
+        // 此时JWT已通过JwtAuthenticationFilter验证，用户已通过认证
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // 2. 获取当前用户ID
+        // JwtAuthenticationFilter在验证token时将userId存储在details中
+        Long userId = (Long) authentication.getDetails();
+
+        // 3. 通过Service层查询用户信息
+        // Service层会过滤敏感信息（如密码）
+        User user = userService.getUserById(userId);
+
+        // 4. 返回成功响应
+        return ResultVO.success(user);
     }
 
     /**
@@ -149,26 +142,19 @@ public class UserProfileController {
      */
     @PutMapping("/profile")
     public ResultVO<User> updateCurrentUserProfile(@Valid @RequestBody UserUpdateDTO userUpdateDTO) {
-        try {
-            // 1. 从Spring Security上下文获取认证信息
-            // JWT认证过滤器已验证token并设置用户认证状态
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            
-            // 2. 获取当前用户ID
-            // JwtAuthenticationFilter在验证token时将userId存储在details中
-            Long userId = (Long) authentication.getDetails();
-            
-            // 3. 调用Service层执行更新操作
-            // Service层会处理业务验证、邮箱唯一性检查、部分更新逻辑
-            User updatedUser = userService.updateUser(userId, userUpdateDTO);
-            
-            // 4. 返回更新后的用户信息
-            return ResultVO.success(updatedUser);
-            
-        } catch (RuntimeException e) {
-            // 5. 异常处理：返回友好的错误信息
-            // 可能的异常：用户不存在、邮箱重复、数据库异常等
-            return ResultVO.error(e.getMessage());
-        }
+        // 1. 从Spring Security上下文获取认证信息
+        // JWT认证过滤器已验证token并设置用户认证状态
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // 2. 获取当前用户ID
+        // JwtAuthenticationFilter在验证token时将userId存储在details中
+        Long userId = (Long) authentication.getDetails();
+
+        // 3. 调用Service层执行更新操作
+        // Service层会处理业务验证、邮箱唯一性检查、部分更新逻辑
+        User updatedUser = userService.updateUser(userId, userUpdateDTO);
+
+        // 4. 返回更新后的用户信息
+        return ResultVO.success(updatedUser);
     }
 }

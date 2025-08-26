@@ -29,14 +29,10 @@ public class UserAuthController {
      */
     @PostMapping("/register")
     public ResultVO<User> register(@Valid @RequestBody UserRegisterDTO registerDTO) {
-        try {
-            User user = userService.register(registerDTO);
-            // 清空密码信息，不返回给前端
-            user.setPasswordHash(null);
-            return ResultVO.success(user);
-        } catch (RuntimeException e) {
-            return ResultVO.error(e.getMessage());
-        }
+        User user = userService.register(registerDTO);
+        // 清空密码信息，不返回给前端
+        user.setPasswordHash(null);
+        return ResultVO.success(user);
     }
     
     /**
@@ -47,12 +43,8 @@ public class UserAuthController {
      */
     @GetMapping("/check-username/{username}")
     public ResultVO<Boolean> checkUsername(@PathVariable String username) {
-        try {
-            boolean exists = userService.existsByUsername(username);
-            return ResultVO.success(!exists); // true表示可用
-        } catch (Exception e) {
-            return ResultVO.error("检查用户名失败");
-        }
+        boolean exists = userService.existsByUsername(username);
+        return ResultVO.success(!exists); // true表示可用
     }
 
     /**
@@ -63,12 +55,8 @@ public class UserAuthController {
      */
     @GetMapping("/check-email/{email}")
     public ResultVO<Boolean> checkEmail(@PathVariable String email) {
-        try {
-            boolean exists = userService.existsByEmail(email);
-            return ResultVO.success(!exists); // true表示可用
-        } catch (Exception e) {
-            return ResultVO.error("检查邮箱失败");
-        }
+        boolean exists = userService.existsByEmail(email);
+        return ResultVO.success(!exists); // true表示可用
     }
     
     /**
@@ -79,11 +67,7 @@ public class UserAuthController {
      */
     @PostMapping("/login")
     public ResultVO<LoginResponseDTO> login(@Valid @RequestBody UserLoginDTO loginDTO) {
-        try {
-            LoginResponseDTO loginResponse = userService.login(loginDTO);
-            return ResultVO.success(loginResponse);
-        } catch (RuntimeException e) {
-            return ResultVO.error(e.getMessage());
-        }
+        LoginResponseDTO loginResponse = userService.login(loginDTO);
+        return ResultVO.success(loginResponse);
     }
 }
