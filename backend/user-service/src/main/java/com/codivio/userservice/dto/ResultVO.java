@@ -108,4 +108,12 @@ public class ResultVO<T> {
     public static <T> ResultVO<T> error(Integer code, String message) {
         return new ResultVO<>(code, message, null);
     }
+    
+    /**
+     * 失败响应 (自定义错误码 + 数据)
+     * 用法: ResultVO.error(400, "参数验证失败", validationErrors)
+     */
+    public static <T> ResultVO<T> error(Integer code, String message, T data) {
+        return new ResultVO<>(code, message, data);
+    }
 }
