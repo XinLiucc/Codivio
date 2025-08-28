@@ -25,21 +25,6 @@ public class ProjectMemberDTO {
     private Long userId;
     
     /**
-     * 用户名（来自用户服务）
-     */
-    private String username;
-    
-    /**
-     * 用户邮箱（来自用户服务）
-     */
-    private String email;
-    
-    /**
-     * 用户昵称（来自用户服务，可能为空）
-     */
-    private String nickname;
-    
-    /**
      * 成员角色
      */
     private ProjectRole role;
@@ -52,14 +37,10 @@ public class ProjectMemberDTO {
     // 构造方法
     public ProjectMemberDTO() {}
     
-    public ProjectMemberDTO(Long id, Long projectId, Long userId, String username, 
-                           String email, String nickname, ProjectRole role, LocalDateTime joinedAt) {
+    public ProjectMemberDTO(Long id, Long projectId, Long userId, ProjectRole role, LocalDateTime joinedAt) {
         this.id = id;
         this.projectId = projectId;
         this.userId = userId;
-        this.username = username;
-        this.email = email;
-        this.nickname = nickname;
         this.role = role;
         this.joinedAt = joinedAt;
     }
@@ -88,31 +69,7 @@ public class ProjectMemberDTO {
     public void setUserId(Long userId) {
         this.userId = userId;
     }
-    
-    public String getUsername() {
-        return username;
-    }
-    
-    public void setUsername(String username) {
-        this.username = username;
-    }
-    
-    public String getEmail() {
-        return email;
-    }
-    
-    public void setEmail(String email) {
-        this.email = email;
-    }
-    
-    public String getNickname() {
-        return nickname;
-    }
-    
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
-    }
-    
+
     public ProjectRole getRole() {
         return role;
     }
@@ -135,9 +92,6 @@ public class ProjectMemberDTO {
                 "id=" + id +
                 ", projectId=" + projectId +
                 ", userId=" + userId +
-                ", username='" + username + '\'' +
-                ", email='" + email + '\'' +
-                ", nickname='" + nickname + '\'' +
                 ", role=" + role +
                 ", joinedAt=" + joinedAt +
                 '}';
