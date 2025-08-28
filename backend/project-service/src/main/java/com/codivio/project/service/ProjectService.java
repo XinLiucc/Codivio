@@ -1,8 +1,11 @@
 package com.codivio.project.service;
 
+import com.codivio.project.dto.AddMemberDTO;
 import com.codivio.project.dto.ProjectCreateDTO;
+import com.codivio.project.dto.ProjectMemberDTO;
 import com.codivio.project.dto.ProjectResponseDTO;
 import com.codivio.project.dto.ProjectUpdateDTO;
+import com.codivio.project.entity.ProjectRole;
 
 import java.util.List;
 
@@ -108,4 +111,37 @@ public interface ProjectService {
      * @return true-是所有者，false-不是所有者
      */
     boolean isProjectOwner(Long projectId, Long userId);
+    
+    /**
+     * 获取项目成员列表
+     * 
+     * @param projectId 项目ID
+     * @return 项目成员列表
+     */
+    List<ProjectMemberDTO> getProjectMembers(Long projectId);
+    
+    /**
+     * 添加项目成员
+     * 
+     * @param projectId 项目ID
+     * @param addMemberDTO 添加成员数据
+     */
+    void addMember(Long projectId, AddMemberDTO addMemberDTO);
+    
+    /**
+     * 更新成员角色
+     * 
+     * @param projectId 项目ID
+     * @param userId 成员用户ID
+     * @param newRole 新角色
+     */
+    void updateMemberRole(Long projectId, Long userId, ProjectRole newRole);
+    
+    /**
+     * 移除项目成员
+     * 
+     * @param projectId 项目ID
+     * @param userId 要移除的成员用户ID
+     */
+    void removeMember(Long projectId, Long userId);
 }
