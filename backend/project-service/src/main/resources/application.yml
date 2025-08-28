@@ -4,6 +4,30 @@ server:
 spring:
   application:
     name: project-service
+  
+  # 数据源配置 - 使用项目服务专用数据库
+  datasource:
+    url: jdbc:mysql://localhost:3306/codivio_project?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: codivio
+    password: codivio123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+    # HikariCP连接池配置
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+  
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: update  # 开发环境自动创建/更新表结构
+    show-sql: true      # 项目服务显示SQL便于调试
+    properties:
+      hibernate:
+        format_sql: true
 
 # 日志配置
 logging:
