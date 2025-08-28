@@ -1,6 +1,8 @@
 package com.codivio.project.service.impl;
 
+import com.codivio.project.dto.AddMemberDTO;
 import com.codivio.project.dto.ProjectCreateDTO;
+import com.codivio.project.dto.ProjectMemberDTO;
 import com.codivio.project.dto.ProjectResponseDTO;
 import com.codivio.project.dto.ProjectUpdateDTO;
 import com.codivio.project.entity.Project;
@@ -19,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 项目服务实现类
@@ -202,5 +205,109 @@ public class ProjectServiceImpl implements ProjectService {
         // 2. 检查是否是项目成员且角色为EDITOR或OWNER
         return projectMemberRepository.existsByProjectIdAndUserIdAndRoleIn(
                 projectId, userId, Arrays.asList(ProjectRole.OWNER, ProjectRole.EDITOR));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProjectMemberDTO> getProjectMembers(Long projectId) {
+        // 1. 检查项目是否存在
+        if(!projectRepository.existsById(projectId)) {
+            throw new BaseBusinessException(ErrorCode.PROJECT_NOT_FOUND);
+        }
+        
+        // 2. 查询项目的所有成员
+        List<ProjectMember> projectMembers = projectMemberRepository.findByProjectId(projectId);
+        
+        // 3. 转换为DTO列表
+        List<ProjectMemberDTO> projectMemberDTOS = new ArrayList<>();
+        for(ProjectMember projectMember : projectMembers) {
+            ProjectMemberDTO projectMemberDTO =  new ProjectMemberDTO();
+            projectMemberDTO.setId(projectMember.getId());
+            projectMemberDTO.setProjectId(projectMember.getProjectId());
+            projectMemberDTO.setUserId(projectMember.getUserId());
+            projectMemberDTO.setRole(projectMember.getRole());
+            projectMemberDTO.setJoinedAt(projectMember.getJoinedAt());
+            projectMemberDTOS.add(projectMemberDTO);
+        }
+        
+        return projectMemberDTOS;
+    }
+    
+    @Override
+    @Transactional
+    public void addMember(Long projectId, AddMemberDTO addMemberDTO) {
+        // 1. 检查项目是否存在
+        if(!projectRepository.existsById(projectId)) {
+            throw new BaseBusinessException(ErrorCode.PROJECT_NOT_FOUND);
+        }
+        
+        // 2. 检查用户是否已经是成员
+        if(projectMemberRepository.existsByProjectIdAndUserId(projectId, addMemberDTO.getUserId())) {
+            throw new BaseBusinessException(ErrorCode.MEMBER_ALREADY_EXISTS);
+        }
+        
+        // 3. 验证角色（不能添加OWNER）
+        if(addMemberDTO.getRole().equals(ProjectRole.OWNER)) {
+            throw new BaseBusinessException(ErrorCode.CANNOT_ADD_OWNER_ROLE);
+        }
+        
+        // 4. 创建成员记录并保存
+        ProjectMember projectMember = new ProjectMember();
+        projectMember.setProjectId(projectId);
+        projectMember.setUserId(addMemberDTO.getUserId());
+        projectMember.setRole(addMemberDTO.getRole());
+        projectMember.setJoinedAt(LocalDateTime.now());
+        projectMemberRepository.save(projectMember);
+    }
+    
+    @Override
+    @Transactional
+    public void updateMemberRole(Long projectId, Long userId, ProjectRole newRole) {
+        // 1. 检查项目是否存在
+        if(!projectRepository.existsById(projectId)) {
+            throw new BaseBusinessException(ErrorCode.PROJECT_NOT_FOUND);
+        }
+        
+        // 2. 查询现有成员记录
+        ProjectMember projectMember = projectMemberRepository
+            .findByProjectIdAndUserId(projectId, userId)
+            .orElseThrow(() -> new BaseBusinessException(ErrorCode.PROJECT_MEMBER_NOT_FOUND));
+        
+        // 3. 验证角色变更规则
+        // 3.1 不能变更为OWNER角色
+        if(newRole.equals(ProjectRole.OWNER)) {
+            throw new BaseBusinessException(ErrorCode.CANNOT_ADD_OWNER_ROLE);
+        }
+        
+        // 3.2 不能修改OWNER的角色
+        if(projectMember.getRole().equals(ProjectRole.OWNER)) {
+            throw new BaseBusinessException(ErrorCode.CANNOT_MODIFY_OWNER_ROLE);
+        }
+        
+        // 4. 更新角色并保存
+        projectMember.setRole(newRole);
+        projectMemberRepository.save(projectMember);
+    }
+    
+    @Override
+    @Transactional
+    public void removeMember(Long projectId, Long userId) {
+        // 1. 检查项目是否存在
+        if(!projectRepository.existsById(projectId)) {
+            throw new BaseBusinessException(ErrorCode.PROJECT_NOT_FOUND);
+        }
+        
+        // 2. 查询成员记录（同时验证成员存在性）
+        ProjectMember projectMember = projectMemberRepository
+            .findByProjectIdAndUserId(projectId, userId)
+            .orElseThrow(() -> new BaseBusinessException(ErrorCode.PROJECT_MEMBER_NOT_FOUND));
+        
+        // 3. 验证不能删除OWNER
+        if(projectMember.getRole().equals(ProjectRole.OWNER)) {
+            throw new BaseBusinessException(ErrorCode.CANNOT_REMOVE_OWNER);
+        }
+        
+        // 4. 删除成员记录
+        projectMemberRepository.delete(projectMember);
     }
 }
