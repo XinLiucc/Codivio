@@ -131,6 +131,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 认证相关接口公开访问（注册、登录、检查用户名等）
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        // 健康检查端点公开访问（用于服务监控）
+                        .requestMatchers("/actuator/health").permitAll()
                         // 其他所有接口都需要认证
                         .anyRequest().authenticated()
                 )
