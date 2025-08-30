@@ -49,3 +49,8 @@ management:
   endpoint:
     health:
       show-details: always
+
+# 服务地址配置
+services:
+  user-service:
+    url: http://localhost:8081
