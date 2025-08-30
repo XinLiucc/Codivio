@@ -23,6 +23,7 @@
         <mybatis.plus.version>3.5.4</mybatis.plus.version>
         <hutool.version>5.8.24</hutool.version>
         <jwt.version>0.12.3</jwt.version>
+        <spring.cloud.version>2023.0.0</spring.cloud.version>
     </properties>
 
     <dependencies>
@@ -69,6 +70,12 @@
             <version>1.4.14</version>
         </dependency>
 
+        <!-- Spring Cloud OpenFeign -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+
         <!-- Test Dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -77,6 +84,18 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring.cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <plugins>

@@ -69,6 +69,7 @@ public enum ErrorCode {
     CANNOT_ADD_OWNER_ROLE(20307, "不能添加所有者角色"),
     CANNOT_REMOVE_OWNER(20308, "不能移除项目所有者"),
     CANNOT_MODIFY_OWNER_ROLE(20309, "不能修改项目所有者的角色"),
+    USER_SERVICE_UNAVAILABLE(20310, "用户服务不可用"),
     
     // 文件服务业务错误 (204xx) - 为文件服务预留
     FILE_NOT_FOUND(20401, "文件不存在"),

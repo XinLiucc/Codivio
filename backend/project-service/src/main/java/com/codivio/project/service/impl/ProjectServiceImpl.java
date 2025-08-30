@@ -1,10 +1,13 @@
 package com.codivio.project.service.impl;
 
+import com.codivio.project.client.UserServiceClient;
 import com.codivio.project.dto.AddMemberDTO;
 import com.codivio.project.dto.ProjectCreateDTO;
 import com.codivio.project.dto.ProjectMemberDTO;
 import com.codivio.project.dto.ProjectResponseDTO;
 import com.codivio.project.dto.ProjectUpdateDTO;
+import com.codivio.project.dto.ResultVO;
+import com.codivio.project.dto.UserValidationDTO;
 import com.codivio.project.entity.Project;
 import com.codivio.project.entity.ProjectMember;
 import com.codivio.project.entity.ProjectRole;
@@ -34,6 +37,9 @@ public class ProjectServiceImpl implements ProjectService {
     
     @Autowired
     private ProjectMemberRepository projectMemberRepository;
+    
+    @Autowired
+    private UserServiceClient userServiceClient;
 
     @Override
     @Transactional
@@ -241,17 +247,29 @@ public class ProjectServiceImpl implements ProjectService {
             throw new BaseBusinessException(ErrorCode.PROJECT_NOT_FOUND);
         }
         
-        // 2. 检查用户是否已经是成员
+        // 2. 验证用户是否存在（通过OpenFeign调用用户服务）
+        try {
+            ResultVO<UserValidationDTO> validationResult = userServiceClient.validateUser(addMemberDTO.getUserId());
+            if (validationResult == null || validationResult.getData() == null || !validationResult.getData().isExists()) {
+                throw new BaseBusinessException(ErrorCode.USER_NOT_FOUND);
+            }
+            System.out.println("用户验证成功: " + validationResult.getData());
+        } catch (Exception e) {
+            System.err.println("用户服务调用失败: " + e.getMessage());
+            throw new BaseBusinessException(ErrorCode.USER_SERVICE_UNAVAILABLE);
+        }
+        
+        // 3. 检查用户是否已经是成员
         if(projectMemberRepository.existsByProjectIdAndUserId(projectId, addMemberDTO.getUserId())) {
             throw new BaseBusinessException(ErrorCode.MEMBER_ALREADY_EXISTS);
         }
         
-        // 3. 验证角色（不能添加OWNER）
+        // 4. 验证角色（不能添加OWNER）
         if(addMemberDTO.getRole().equals(ProjectRole.OWNER)) {
             throw new BaseBusinessException(ErrorCode.CANNOT_ADD_OWNER_ROLE);
         }
         
-        // 4. 创建成员记录并保存
+        // 5. 创建成员记录并保存
         ProjectMember projectMember = new ProjectMember();
         projectMember.setProjectId(projectId);
         projectMember.setUserId(addMemberDTO.getUserId());

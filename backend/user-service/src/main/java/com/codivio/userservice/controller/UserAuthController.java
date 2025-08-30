@@ -70,4 +70,17 @@ public class UserAuthController {
         LoginResponseDTO loginResponse = userService.login(loginDTO);
         return ResultVO.success(loginResponse);
     }
+
+    /**
+     * 验证用户ID和用户名是否匹配（供网关调用）
+     * 
+     * @param userId 用户ID
+     * @param username 用户名
+     * @return 是否匹配
+     */
+    @GetMapping("/validate-user/{userId}/{username}")
+    public ResultVO<Boolean> validateUser(@PathVariable Long userId, @PathVariable String username) {
+        boolean valid = userService.validateUserMatch(userId, username);
+        return ResultVO.success(valid);
+    }
 }
