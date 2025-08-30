@@ -43,6 +43,13 @@
             <version>${jackson.version}</version>
         </dependency>
 
+        <!-- WebFlux WebClient for HTTP calls -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webflux</artifactId>
+            <version>6.1.1</version>
+        </dependency>
+
         <!-- JWT依赖 - 版本与用户服务保持一致 -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
