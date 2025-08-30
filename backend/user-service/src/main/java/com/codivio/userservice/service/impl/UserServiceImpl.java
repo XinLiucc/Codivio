@@ -87,6 +87,16 @@ public class UserServiceImpl implements UserService {
         return userRepository.existsByEmail(email);
     }
     
+    @Override
+    public boolean validateUserMatch(Long userId, String username) {
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isEmpty()) {
+            return false;
+        }
+        User user = userOptional.get();
+        return user.getUsername().equals(username);
+    }
+    
     /**
      * 用户登录
      */
@@ -207,5 +217,33 @@ public class UserServiceImpl implements UserService {
         // passwordHash保持null，不返回给前端
         
         return safeUser;
+    }
+    
+    /**
+     * 根据用户ID查找用户（允许返回null）
+     * 供服务间通信使用，不抛出异常
+     */
+    @Override
+    public User findById(Long userId) {
+        if (userId == null) {
+            return null;
+        }
+        
+        Optional<User> userOptional = userRepository.findById(userId);
+        return userOptional.orElse(null);
+    }
+    
+    /**
+     * 根据用户名查找用户（允许返回null）
+     * 供服务间通信使用，不抛出异常
+     */
+    @Override
+    public User findByUsername(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return null;
+        }
+        
+        Optional<User> userOptional = userRepository.findByUsername(username.trim());
+        return userOptional.orElse(null);
     }
 }

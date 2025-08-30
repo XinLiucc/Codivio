@@ -45,6 +45,15 @@ public interface UserService {
     boolean existsByEmail(String email);
     
     /**
+     * 验证用户ID和用户名是否匹配
+     * 
+     * @param userId 用户ID
+     * @param username 用户名
+     * @return true-匹配, false-不匹配或用户不存在
+     */
+    boolean validateUserMatch(Long userId, String username);
+    
+    /**
      * 用户登录
      * 
      * 业务逻辑：
@@ -90,4 +99,22 @@ public interface UserService {
      * @throws RuntimeException 当用户不存在或邮箱重复时抛出异常
      */
     User updateUser(Long userId, UserUpdateDTO userUpdateDTO);
+    
+    /**
+     * 根据用户ID查找用户（允许返回null）
+     * 供服务间通信使用，不抛出异常
+     * 
+     * @param userId 用户ID
+     * @return 用户信息，不存在时返回null
+     */
+    User findById(Long userId);
+    
+    /**
+     * 根据用户名查找用户（允许返回null）
+     * 供服务间通信使用，不抛出异常
+     * 
+     * @param username 用户名
+     * @return 用户信息，不存在时返回null
+     */
+    User findByUsername(String username);
 }
