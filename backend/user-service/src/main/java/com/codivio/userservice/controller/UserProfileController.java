@@ -3,11 +3,12 @@ package com.codivio.userservice.controller;
 import com.codivio.userservice.dto.ResultVO;
 import com.codivio.userservice.dto.UserUpdateDTO;
 import com.codivio.userservice.entity.User;
+import com.codivio.userservice.exception.BaseBusinessException;
+import com.codivio.userservice.exception.ErrorCode;
 import com.codivio.userservice.service.UserService;
+import com.codivio.userservice.util.GatewayUserUtil;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -36,6 +37,9 @@ public class UserProfileController {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private GatewayUserUtil gatewayUserUtil;
     
     /**
      * 获取当前用户信息
@@ -75,19 +79,17 @@ public class UserProfileController {
      */
     @GetMapping("/profile")
     public ResultVO<User> getCurrentUserProfile() {
-        // 1. 从Spring Security上下文获取认证信息
-        // 此时JWT已通过JwtAuthenticationFilter验证，用户已通过认证
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        // 1. 从网关传递的请求头获取用户ID
+        Long userId = gatewayUserUtil.getCurrentUserId();
+        
+        if (userId == null) {
+            throw new BaseBusinessException(ErrorCode.UNAUTHORIZED, "无法获取用户信息，请通过网关访问");
+        }
 
-        // 2. 获取当前用户ID
-        // JwtAuthenticationFilter在验证token时将userId存储在details中
-        Long userId = (Long) authentication.getDetails();
-
-        // 3. 通过Service层查询用户信息
-        // Service层会过滤敏感信息（如密码）
+        // 2. 通过Service层查询用户信息
         User user = userService.getUserById(userId);
 
-        // 4. 返回成功响应
+        // 3. 返回成功响应
         return ResultVO.success(user);
     }
 
@@ -142,19 +144,17 @@ public class UserProfileController {
      */
     @PutMapping("/profile")
     public ResultVO<User> updateCurrentUserProfile(@Valid @RequestBody UserUpdateDTO userUpdateDTO) {
-        // 1. 从Spring Security上下文获取认证信息
-        // JWT认证过滤器已验证token并设置用户认证状态
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        // 1. 从网关传递的请求头获取用户ID
+        Long userId = gatewayUserUtil.getCurrentUserId();
+        
+        if (userId == null) {
+            throw new BaseBusinessException(ErrorCode.UNAUTHORIZED, "无法获取用户信息，请通过网关访问");
+        }
 
-        // 2. 获取当前用户ID
-        // JwtAuthenticationFilter在验证token时将userId存储在details中
-        Long userId = (Long) authentication.getDetails();
-
-        // 3. 调用Service层执行更新操作
-        // Service层会处理业务验证、邮箱唯一性检查、部分更新逻辑
+        // 2. 调用Service层执行更新操作
         User updatedUser = userService.updateUser(userId, userUpdateDTO);
 
-        // 4. 返回更新后的用户信息
+        // 3. 返回更新后的用户信息
         return ResultVO.success(updatedUser);
     }
 }
