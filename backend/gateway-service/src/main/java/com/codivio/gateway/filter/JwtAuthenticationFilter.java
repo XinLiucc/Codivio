@@ -1,5 +1,6 @@
 package com.codivio.gateway.filter;
 
+import com.codivio.gateway.client.UserServiceClient;
 import com.codivio.gateway.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -25,6 +26,9 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
     @Autowired
     private JwtUtil jwtUtil;
+    
+    @Autowired
+    private UserServiceClient userServiceClient;
 
     /**
      * 不需要认证的路径白名单
@@ -68,21 +72,31 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             return unauthorizedResponse(exchange.getResponse(), "Token无效或已过期");
         }
 
-        // 4. 提取用户信息并添加到请求头
+        // 4. 提取用户信息并验证用户存在性
         try {
             Long userId = jwtUtil.getUserIdFromToken(token);
             String username = jwtUtil.getUsernameFromToken(token);
 
             if (userId != null && username != null) {
-                // 添加用户信息到请求头，传递给下游服务（保留原始Authorization头）
-                ServerHttpRequest modifiedRequest = request.mutate()
-                        .header("X-User-Id", userId.toString())
-                        .header("X-Username", username)
-                        .build();
+                // 5. 调用用户服务验证用户ID和用户名匹配
+                return userServiceClient.validateUser(userId, username)
+                        .flatMap(isValid -> {
+                            if (!isValid) {
+                                System.out.println("用户验证失败: " + username + " (ID: " + userId + ")");
+                                return unauthorizedResponse(exchange.getResponse(), "用户不存在或信息不匹配");
+                            }
+                            
+                            // 添加用户信息到请求头，移除Authorization头（下游服务不需要JWT）
+                            ServerHttpRequest modifiedRequest = request.mutate()
+                                    .header("X-User-Id", userId.toString())
+                                    .header("X-Username", username)
+                                    .headers(headers -> headers.remove("Authorization"))
+                                    .build();
 
-                System.out.println("JWT验证成功，用户: " + username + " (ID: " + userId + ")");
-                System.out.println("传递给下游服务的请求头: Authorization保留, X-User-Id=" + userId + ", X-Username=" + username);
-                return chain.filter(exchange.mutate().request(modifiedRequest).build());
+                            System.out.println("JWT验证成功，用户验证通过: " + username + " (ID: " + userId + ")");
+                            System.out.println("传递给下游服务的请求头: X-User-Id=" + userId + ", X-Username=" + username);
+                            return chain.filter(exchange.mutate().request(modifiedRequest).build());
+                        });
             } else {
                 System.out.println("从JWT中提取用户信息失败");
                 return unauthorizedResponse(exchange.getResponse(), "Token中用户信息无效");
