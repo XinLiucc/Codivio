@@ -54,7 +54,6 @@ services:
       - "8081:8081"
     depends_on:
       - mysql
-      - redis
     networks:
       - codivio-network
     environment:
@@ -69,10 +68,10 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - user-service
-      - project-service
-      - collaboration-service
-      - file-service
+      user-service:
+        condition: service_healthy
+      project-service:
+        condition: service_healthy
     networks:
       - codivio-network
     environment:
@@ -87,8 +86,10 @@ services:
     ports:
       - "8082:8082"
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_started
+      user-service:
+        condition: service_healthy
     networks:
       - codivio-network
     environment:

@@ -10,10 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
  * 用户服务Feign客户端
  * 用于项目服务调用用户服务的接口
  */
-@FeignClient(
-    name = "user-service", 
-    url = "http://localhost:8081"
-)
+@FeignClient(name = "user-service", url = "${feign.client.config.user-service.url:http://localhost:8081}")
 public interface UserServiceClient {
     
     /**

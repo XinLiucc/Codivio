@@ -2,7 +2,7 @@
 spring:
   # 数据源配置 - Docker环境
   datasource:
-    url: jdbc:mysql://mysql:3306/codivio_user?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://mysql:3306/codivio_project?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
     username: codivio
     password: codivio123
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -25,9 +25,8 @@ spring:
 # 日志配置 - Docker环境
 logging:
   level:
-    com.codivio.userservice: INFO
-    org.springframework.security: WARN
-    org.hibernate.SQL: ERROR
+    com.codivio.project: INFO
+    org.springframework.cloud.openfeign: DEBUG
 
 # 管理端点配置 - 完全禁用指标自动配置
 management:
@@ -46,3 +45,10 @@ management:
     export:
       defaults:
         enabled: false
+
+# OpenFeign配置 - Docker环境
+feign:
+  client:
+    config:
+      user-service:
+        url: http://user-service:8081
