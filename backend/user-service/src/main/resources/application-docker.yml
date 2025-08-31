@@ -14,6 +14,13 @@ spring:
       idle-timeout: 300000
       connection-timeout: 30000
       max-lifetime: 1200000
+  
+  # 完全禁用Spring Boot Actuator的系统指标
+  autoconfigure:
+    exclude: 
+      - org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.JvmMetricsAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.web.tomcat.TomcatMetricsAutoConfiguration
 
 # 日志配置 - Docker环境
 logging:
@@ -21,3 +28,21 @@ logging:
     com.codivio.userservice: INFO
     org.springframework.security: WARN
     org.hibernate.SQL: ERROR
+
+# 管理端点配置 - 完全禁用指标自动配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  metrics:
+    enabled: false
+    enable:
+      process: false
+      system: false
+      jvm: false
+      tomcat: false
+      web: false
+    export:
+      defaults:
+        enabled: false
