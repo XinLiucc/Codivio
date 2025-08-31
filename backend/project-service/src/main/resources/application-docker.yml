@@ -1,0 +1,54 @@
+# Docker环境配置
+spring:
+  # 数据源配置 - Docker环境
+  datasource:
+    url: jdbc:mysql://mysql:3306/codivio_project?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: codivio
+    password: codivio123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+    # Docker环境连接池优化
+    hikari:
+      minimum-idle: 2
+      maximum-pool-size: 10
+      idle-timeout: 300000
+      connection-timeout: 30000
+      max-lifetime: 1200000
+  
+  # 完全禁用Spring Boot Actuator的系统指标
+  autoconfigure:
+    exclude: 
+      - org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.JvmMetricsAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.web.tomcat.TomcatMetricsAutoConfiguration
+
+# 日志配置 - Docker环境
+logging:
+  level:
+    com.codivio.project: INFO
+    org.springframework.cloud.openfeign: DEBUG
+
+# 管理端点配置 - 完全禁用指标自动配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  metrics:
+    enabled: false
+    enable:
+      process: false
+      system: false
+      jvm: false
+      tomcat: false
+      web: false
+    export:
+      defaults:
+        enabled: false
+
+# OpenFeign配置 - Docker环境
+feign:
+  client:
+    config:
+      user-service:
+        url: http://user-service:8081
