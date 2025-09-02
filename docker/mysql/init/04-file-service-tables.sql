@@ -16,8 +16,7 @@ CREATE TABLE files (
     file_extension VARCHAR(20) COMMENT '文件扩展名',
     
     -- 关联信息
-    project_id VARCHAR(32) NOT NULL COMMENT '所属项目ID',
-    uploaded_by BIGINT NOT NULL COMMENT '上传者ID',
+    project_id BIGINT NOT NULL COMMENT '所属项目ID',
     
     -- 文件内容（文本文件）
     content LONGTEXT COMMENT '文件内容（仅文本文件）',
@@ -31,12 +30,14 @@ CREATE TABLE files (
     -- 状态信息
     status TINYINT DEFAULT 1 COMMENT '状态: 0-删除, 1-正常',
     
+    -- 编辑信息
+    last_editor_id BIGINT COMMENT '最后编辑者ID',
+    
     -- 时间戳
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
     INDEX idx_project_id (project_id),
-    INDEX idx_uploaded_by (uploaded_by),
     INDEX idx_file_path (file_path),
     INDEX idx_mime_type (mime_type),
     INDEX idx_status (status),
