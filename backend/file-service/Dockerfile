@@ -1,25 +1,43 @@
-# 使用官方的 OpenJDK 17 基础镜像
-FROM openjdk:17-jdk-slim
+# 多阶段构建 - 构建阶段
+FROM maven:3.8-openjdk-17 AS builder
 
-# 设置工作目录
 WORKDIR /app
 
-# 复制 Maven 配置文件
+# 复制Maven配置文件
 COPY pom.xml .
+
+# 下载依赖（利用Docker缓存）
+RUN mvn dependency:go-offline -B
 
 # 复制源代码
 COPY src ./src
 
-# 复制 Maven Wrapper（如果有的话）
-
-# 安装 Maven（如果镜像中没有）
-RUN apt-get update && apt-get install -y maven
-
 # 构建应用
 RUN mvn clean package -DskipTests
 
-# 运行应用
-CMD ["java", "-jar", "target/file-service-1.0.0.jar"]
+# 运行阶段
+FROM openjdk:17-jdk-slim
+
+WORKDIR /app
+
+# 安装curl用于健康检查
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# 复制构建产物
+COPY --from=builder /app/target/file-service-1.0.0.jar app.jar
+
+# 创建文件存储目录
+RUN mkdir -p /app/files
+
+# 添加健康检查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:8084/actuator/health || exit 1
+
+# JVM优化参数和Docker兼容性参数
+ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC -Djdk.internal.platform.cgroupv1.useSystemdMemoryController=false"
 
 # 暴露端口
 EXPOSE 8084
+
+# 运行应用
+CMD java $JAVA_OPTS -jar app.jar
