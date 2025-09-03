@@ -1,0 +1,49 @@
+# Docker环境配置
+spring:
+  # 完全禁用Spring Boot Actuator的系统指标
+  autoconfigure:
+    exclude: 
+      - org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.JvmMetricsAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.web.tomcat.TomcatMetricsAutoConfiguration
+
+  # 数据源配置 - Docker环境使用容器服务名
+  datasource:
+    url: jdbc:mysql://mysql:3306/codivio_file?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: codivio
+    password: codivio123
+    
+  # JPA配置 - 生产环境关闭SQL日志
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+# 日志配置 - Docker环境
+logging:
+  level:
+    com.codivio.file: INFO
+
+# 管理端点配置 - 完全禁用指标自动配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  metrics:
+    enabled: false
+    enable:
+      process: false
+      system: false
+      jvm: false
+      tomcat: false
+      web: false
+    export:
+      defaults:
+        enabled: false
+
+# 文件服务配置 - Docker环境
+file:
+  storage:
+    path: /app/files  # 容器内文件存储路径
