@@ -25,9 +25,9 @@ spring:
           uri: http://collaboration-service:8083
           predicates:
             - Path=/api/v1/collaboration/**
-        # 文件服务路由 (临时指向宿主机本地服务)
+        # 文件服务路由
         - id: file-service
-          uri: http://host.docker.internal:8084
+          uri: http://file-service:8084
           predicates:
             - Path=/api/v1/files/**
 
