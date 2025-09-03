@@ -72,6 +72,8 @@ services:
         condition: service_healthy
       project-service:
         condition: service_healthy
+      file-service:
+        condition: service_healthy
     networks:
       - codivio-network
     environment:
@@ -121,8 +123,10 @@ services:
     ports:
       - "8084:8084"
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_started
+      user-service:
+        condition: service_healthy
     networks:
       - codivio-network
     environment:
