@@ -9,6 +9,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AvatarUpload: typeof import('./src/components/AvatarUpload.vue')['default']
+    CodeEditor: typeof import('./src/components/CodeEditor.vue')['default']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElAvatarGroup: typeof import('element-plus/es')['ElAvatarGroup']
     ElBreadcrumb: typeof import('element-plus/es')['ElBreadcrumb']
