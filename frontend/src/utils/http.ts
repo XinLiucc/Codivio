@@ -60,15 +60,21 @@ http.interceptors.response.use(
       console.log('📥 收到响应:', response.status, response.config.url, data)
     }
     
+    // 如果响应类型不是JSON（如文本文件下载），直接返回
+    const contentType = response.headers['content-type'] || ''
+    if (contentType.includes('text/') || response.config.responseType === 'text') {
+      return response
+    }
+    
     // 处理业务状态码
     // 为什么要在这里处理业务错误？
     // 1. 统一性 - 所有组件都按照相同的方式处理业务错误
     // 2. 自动化 - 自动显示错误提示，组件中不需要重复处理
     // 3. 认证处理 - 统一处理token过期等认证相关错误
-    if (data.code === 200) {
+    if (data && typeof data === 'object' && data.code === 200) {
       // 业务成功，返回完整的响应对象
       return response
-    } else {
+    } else if (data && typeof data === 'object' && data.code) {
       // 业务失败，根据你的业务错误码进行处理
       handleBusinessError(data.code, data.message)
       
@@ -77,6 +83,9 @@ http.interceptors.response.use(
       businessError.code = data.code
       businessError.response = response
       throw businessError
+    } else {
+      // 非标准格式的响应，直接返回
+      return response
     }
   },
   (error: AxiosError) => {
