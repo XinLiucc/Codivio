@@ -100,37 +100,39 @@
               </template>
             </el-table-column>
             
-            <el-table-column label="操作" width="250">
+            <el-table-column label="操作" width="280">
               <template #default="{ row }">
-                <el-button 
-                  type="primary" 
-                  size="small" 
-                  @click="handlePreviewFile(row)"
-                >
-                  预览
-                </el-button>
-                <el-button 
-                  type="success" 
-                  size="small" 
-                  @click="handleEditFile(row)"
-                  v-if="isEditableFile(row.fileExtension)"
-                >
-                  编辑
-                </el-button>
-                <el-button 
-                  type="info" 
-                  size="small" 
-                  @click="handleDownloadFile(row)"
-                >
-                  下载
-                </el-button>
-                <el-button 
-                  type="danger" 
-                  size="small" 
-                  @click="handleDeleteFile(row)"
-                >
-                  删除
-                </el-button>
+                <div class="action-buttons">
+                  <el-button 
+                    type="primary" 
+                    size="small" 
+                    @click="handlePreviewFile(row)"
+                  >
+                    预览
+                  </el-button>
+                  <el-button 
+                    type="success" 
+                    size="small" 
+                    @click="handleEditFile(row)"
+                    v-if="isEditableFile(row.fileExtension)"
+                  >
+                    编辑
+                  </el-button>
+                  <el-button 
+                    type="info" 
+                    size="small" 
+                    @click="handleDownloadFile(row)"
+                  >
+                    下载
+                  </el-button>
+                  <el-button 
+                    type="danger" 
+                    size="small" 
+                    @click="handleDeleteFile(row)"
+                  >
+                    删除
+                  </el-button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -186,30 +188,35 @@
     </el-dialog>
 
     <!-- 文本文件创建对话框 -->
-    <el-dialog v-model="showTextUploadDialog" title="创建文本文件" width="600px">
+    <el-dialog v-model="showTextUploadDialog" title="创建文本文件" width="90%" top="3vh">
       <el-form
         :model="textForm"
         :rules="textRules"
         ref="textFormRef"
         label-width="80px"
       >
-        <el-form-item label="文件名" prop="fileName">
-          <el-input v-model="textForm.fileName" placeholder="例如: main.js">
-          </el-input>
-        </el-form-item>
-        
-        <el-form-item label="文件路径" prop="filePath">
-          <el-input v-model="textForm.filePath" placeholder="例如: src/">
-            <template #prepend>/</template>
-          </el-input>
-          <div class="form-tip">指定文件在项目中的目录路径</div>
-        </el-form-item>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="文件名" prop="fileName">
+              <el-input v-model="textForm.fileName" placeholder="例如: main.js">
+              </el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="文件路径" prop="filePath">
+              <el-input v-model="textForm.filePath" placeholder="例如: src/">
+                <template #prepend>/</template>
+              </el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
         
         <el-form-item label="文件内容" prop="content">
-          <el-input
+          <CodeEditor
             v-model="textForm.content"
-            type="textarea"
-            :rows="10"
+            :filename="textForm.fileName"
+            :height="'60vh'"
+            :show-toolbar="true"
             placeholder="请输入文件内容..."
           />
         </el-form-item>
@@ -244,12 +251,21 @@
     </el-dialog>
 
     <!-- 文件编辑对话框 -->
-    <el-dialog v-model="showEditDialog" :title="`编辑: ${editFile?.originalName}`" width="80%" top="5vh">
+    <el-dialog v-model="showEditDialog" :title="`编辑: ${editFile?.originalName}`" width="95%" top="2vh">
       <div v-loading="loadingEdit" class="edit-content">
+        <CodeEditor
+          v-if="!loadingEdit && isEditableFile(editFile?.fileExtension)"
+          v-model="editContent"
+          :filename="editFile?.originalName"
+          :height="'70vh'"
+          @save="handleSaveFile"
+          :show-toolbar="true"
+        />
         <el-input
+          v-else-if="!loadingEdit"
           v-model="editContent"
           type="textarea"
-          :rows="20"
+          :rows="25"
           placeholder="文件内容..."
         />
       </div>
@@ -272,6 +288,7 @@ import {
   ArrowLeft, Upload, DocumentAdd, FolderOpened, DataLine, Clock,
   Document, VideoPlay, Picture, Folder, Files
 } from '@element-plus/icons-vue'
+import CodeEditor from '@/components/CodeEditor.vue'
 import { projectAPI, type ProjectInfo } from '@/api/project'
 import { fileAPI, type FileInfo, type FileStats } from '@/api/file'
 
@@ -364,6 +381,11 @@ const getFileIcon = (extension: string) => {
     'json': Document,
     'txt': Document,
     'md': Document,
+    'c': Document,
+    'cpp': Document,
+    'h': Document,
+    'py': Document,
+    'java': Document,
     'jpg': Picture,
     'jpeg': Picture,
     'png': Picture,
@@ -372,7 +394,9 @@ const getFileIcon = (extension: string) => {
     'avi': VideoPlay,
     'folder': Folder
   }
-  return iconMap[extension?.toLowerCase()] || Files
+  // 移除扩展名前面的点号
+  const cleanExtension = extension?.toLowerCase().replace(/^\./, '') || ''
+  return iconMap[cleanExtension] || Files
 }
 
 // 获取文件图标颜色
@@ -386,6 +410,11 @@ const getFileIconColor = (extension: string) => {
     'json': '#000000',
     'txt': '#666666',
     'md': '#083fa1',
+    'c': '#A8B9CC',
+    'cpp': '#00599C',
+    'h': '#A8B9CC',
+    'py': '#3776AB',
+    'java': '#ED8B00',
     'jpg': '#ff6b6b',
     'jpeg': '#ff6b6b',
     'png': '#4ecdc4',
@@ -393,19 +422,25 @@ const getFileIconColor = (extension: string) => {
     'mp4': '#ff6b6b',
     'avi': '#ff6b6b'
   }
-  return colorMap[extension?.toLowerCase()] || '#666666'
+  // 移除扩展名前面的点号
+  const cleanExtension = extension?.toLowerCase().replace(/^\./, '') || ''
+  return colorMap[cleanExtension] || '#666666'
 }
 
 // 判断是否为可编辑文件
 const isEditableFile = (extension: string) => {
-  const editableTypes = ['js', 'ts', 'vue', 'html', 'css', 'json', 'txt', 'md', 'xml', 'yml', 'yaml']
-  return editableTypes.includes(extension?.toLowerCase())
+  const editableTypes = ['js', 'ts', 'vue', 'html', 'css', 'json', 'txt', 'md', 'xml', 'yml', 'yaml', 'py', 'java', 'cpp', 'c', 'h', 'scss', 'less', 'sql']
+  // 移除扩展名前面的点号
+  const cleanExtension = extension?.toLowerCase().replace(/^\./, '') || ''
+  return editableTypes.includes(cleanExtension)
 }
 
 // 判断是否为文本文件
 const isTextFile = (extension: string) => {
   const textTypes = ['js', 'ts', 'vue', 'html', 'css', 'json', 'txt', 'md', 'xml', 'yml', 'yaml', 'py', 'java', 'cpp', 'c', 'h']
-  return textTypes.includes(extension?.toLowerCase())
+  // 移除扩展名前面的点号
+  const cleanExtension = extension?.toLowerCase().replace(/^\./, '') || ''
+  return textTypes.includes(cleanExtension)
 }
 
 // 格式化日期时间
@@ -844,5 +879,23 @@ onMounted(() => {
 
 .edit-content {
   min-height: 300px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.action-buttons .el-button {
+  margin: 0;
+  min-width: 52px;
+  font-size: 12px;
+}
+
+.action-buttons .el-button + .el-button {
+  margin-left: 0;
 }
 </style>
