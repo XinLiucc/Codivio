@@ -43,4 +43,11 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
   },
+  // Monaco Editor 配置
+  define: {
+    global: 'globalThis',
+  },
+  optimizeDeps: {
+    include: ['monaco-editor']
+  }
 })
