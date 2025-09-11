@@ -1,37 +1,41 @@
 <template>
   <div id="app">
-    <h1>{{ title }}</h1>
-    <p>✅ Vue 3 框架运行正常</p>
+    <!--router-view是路由组件的显示区域-->
+    <router-view />
   </div>
 </template>
 
-<script>
-export default {
-  name: 'App',
-  data() {
-    return {
-      title: 'Codivio 前端框架'
-    }
-  }
-}
+<script setup lang="ts">
+
 </script>
 
 <style>
 #app {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-h1 {
-  color: #2c3e50;
-  margin-bottom: 1rem;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-p {
-  color: #27ae60;
-  font-size: 1.2rem;
+/* 确保 Element Plus 弹窗正确定位 */
+.el-message-box__wrapper {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 2001 !important;
+}
+
+.el-message-box {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
 }
 </style>
