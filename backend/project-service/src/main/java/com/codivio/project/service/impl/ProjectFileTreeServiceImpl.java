@@ -11,6 +11,7 @@ import com.codivio.project.repository.ProjectFileTreeRepository;
 import com.codivio.project.repository.ProjectMemberRepository;
 import com.codivio.project.repository.ProjectRepository;
 import com.codivio.project.service.ProjectFileTreeService;
+import com.codivio.project.service.FileOperationProducer;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -60,8 +61,11 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
     @Autowired
     private ProjectRepository projectRepository;
 
-    // 注：消息队列相关的依赖稍后添加
-    // private FileOperationProducer fileOperationProducer;
+    /**
+     * 文件操作消息生产者 - 用于异步文件操作
+     */
+    @Autowired
+    private FileOperationProducer fileOperationProducer;
 
     // ================================ 查询相关方法实现 ================================
 
@@ -669,11 +673,17 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
         // 9. 更新项目统计信息
         syncProjectFileStatistics(projectId);
 
-        // TODO: 10. 发送消息队列（如果是文件类型）
-        // 暂时跳过消息队列集成，后续添加
-        // if (type == FileTreeType.FILE) {
-        //     fileOperationProducer.sendCreateFileMessage(savedNode);
-        // }
+        // 10. 发送消息队列 - 异步创建物理文件/目录
+        try {
+            if (type == FileTreeType.FILE) {
+                fileOperationProducer.sendCreateFileMessage(savedNode, userId);
+            } else if (type == FileTreeType.DIRECTORY) {
+                fileOperationProducer.sendCreateDirectoryMessage(savedNode, userId);
+            }
+        } catch (Exception e) {
+            // 消息队列发送失败不影响主业务流程，记录日志即可
+            System.err.println("文件操作消息发送失败，但文件树节点已创建: " + e.getMessage());
+        }
 
         return savedNode;
     }
@@ -803,11 +813,17 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
         // 6. 更新项目统计信息
         syncProjectFileStatistics(projectId);
 
-        // TODO: 7. 发送消息队列异步删除物理文件
-        // 暂时跳过消息队列集成，后续添加
-        // if (node.getType() == FileTreeType.FILE && StringUtils.hasText(node.getFileId())) {
-        //     fileOperationProducer.sendDeleteFileMessage(node.getFileId());
-        // }
+        // 7. 发送消息队列异步删除物理文件/目录
+        try {
+            if (node.getType() == FileTreeType.FILE) {
+                fileOperationProducer.sendDeleteFileMessage(node, userId);
+            } else if (node.getType() == FileTreeType.DIRECTORY) {
+                fileOperationProducer.sendDeleteDirectoryMessage(node, userId);
+            }
+        } catch (Exception e) {
+            // 消息队列发送失败不影响主业务流程，记录日志即可
+            System.err.println("删除文件操作消息发送失败，但文件树节点已删除: " + e.getMessage());
+        }
     }
 
     @Override
