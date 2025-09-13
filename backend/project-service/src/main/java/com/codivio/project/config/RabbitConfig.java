@@ -1,5 +1,7 @@
 package com.codivio.project.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -62,10 +64,14 @@ public class RabbitConfig {
     /**
      * JSON消息转换器
      * 将Java对象序列化为JSON格式进行传输
+     * 配置Jackson支持Java 8时间类型
      */
     @Bean
     public MessageConverter jsonMessageConverter() {
-        return new Jackson2JsonMessageConverter();
+        ObjectMapper objectMapper = new ObjectMapper();
+        // 注册JavaTimeModule支持LocalDateTime等Java 8时间类型
+        objectMapper.registerModule(new JavaTimeModule());
+        return new Jackson2JsonMessageConverter(objectMapper);
     }
 
     /**
