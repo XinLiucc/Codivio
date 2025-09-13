@@ -94,6 +94,14 @@ public class ResultVO<T> {
     }
     
     /**
+     * 成功响应 (带数据和自定义消息)
+     * 用法: ResultVO.success(user, "获取用户成功")
+     */
+    public static <T> ResultVO<T> success(T data, String message) {
+        return new ResultVO<>(200, message, data);
+    }
+    
+    /**
      * 失败响应 (默认400错误)
      * 用法: ResultVO.error("用户名已存在")
      */

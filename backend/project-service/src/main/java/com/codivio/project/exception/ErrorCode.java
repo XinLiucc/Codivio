@@ -71,6 +71,10 @@ public enum ErrorCode {
     CANNOT_MODIFY_OWNER_ROLE(20309, "不能修改项目所有者的角色"),
     USER_SERVICE_UNAVAILABLE(20310, "用户服务不可用"),
     
+    // 文件树相关错误 (2031x)
+    PARENT_PATH_NOT_FOUND(20311, "父路径不存在"),
+    FILE_NODE_NOT_FOUND(20312, "文件树节点不存在"),
+    
     // 文件服务业务错误 (204xx) - 为文件服务预留
     FILE_NOT_FOUND(20401, "文件不存在"),
     FILE_UPLOAD_FAILED(20402, "文件上传失败");
