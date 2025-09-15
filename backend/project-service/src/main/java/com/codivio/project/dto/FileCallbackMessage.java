@@ -1,5 +1,6 @@
 package com.codivio.project.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 
 /**
@@ -85,6 +86,7 @@ public class FileCallbackMessage {
     /**
      * 回调时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
     private LocalDateTime callbackTime;
 
     /**
