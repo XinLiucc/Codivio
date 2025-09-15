@@ -24,50 +24,54 @@
 
 ---
 
-## 🚀 第7阶段: 项目文件树后端开发 (2025-09-11开始)
+## 🚀 第7阶段: 项目文件树后端开发 (2025-09-13完成85%)
 
 > **核心目标**: 完善项目服务中的文件树管理功能，实现层级化文件夹管理
 
 **基础条件**: ✅ 前端Monaco Editor已集成 + ✅ project_file_tree数据表已创建  
 **开始时间**: 2025-09-11  
-**预计完成**: 2025-09-18 (1周)  
-**技术重点**: Spring Boot + JPA + OpenFeign服务间调用
+**当前进度**: 85% (项目服务消息队列集成完成)  
+**技术重点**: Spring Boot + JPA + RabbitMQ消息队列 + OpenFeign服务间调用
 
-### 7.1 项目服务文件树功能开发 🌲 后端核心
+### 7.1 项目服务文件树功能开发 🌲 后端核心 ✅ 已完成
 
-- [ ] **文件树实体和数据访问**
-  - [ ] 创建ProjectFileTree实体类和Repository
-  - [ ] 实现文件树层级查询和路径管理
-  - [ ] 添加文件节点的CRUD数据访问方法
-  - [ ] 实现父子关系的级联操作
+- [x] **文件树实体和数据访问**
+  - [x] 创建ProjectFileTree实体类和Repository
+  - [x] 实现文件树层级查询和路径管理 (18个专业方法)
+  - [x] 添加文件节点的CRUD数据访问方法
+  - [x] 实现父子关系的级联操作
 
-- [ ] **文件树业务逻辑服务**
-  - [ ] 实现ProjectFileTreeService业务逻辑
-  - [ ] 构建层级化文件树数据结构
-  - [ ] 实现文件/目录节点的创建和删除
-  - [ ] 集成权限验证和项目成员检查
+- [x] **文件树业务逻辑服务**
+  - [x] 实现ProjectFileTreeService业务逻辑
+  - [x] 构建层级化文件树数据结构 (递归算法)
+  - [x] 实现文件/目录节点的创建和删除
+  - [x] 集成权限验证和项目成员检查
 
-- [ ] **文件树API接口** (6个核心接口)
-  - [ ] GET `/api/v1/projects/{projectId}/files` - 获取项目文件树
-  - [ ] POST `/api/v1/projects/{projectId}/files/tree` - 创建文件/目录节点  
-  - [ ] PUT `/api/v1/projects/{projectId}/files/tree` - 更新节点信息
-  - [ ] DELETE `/api/v1/projects/{projectId}/files/tree` - 删除节点
-  - [ ] GET `/api/v1/projects/{projectId}/files/{fileId}/content` - 获取文件内容(代理)
-  - [ ] PUT `/api/v1/projects/{projectId}/files/{fileId}/content` - 保存文件内容(代理)
+- [x] **文件树API接口** (6个核心接口) ✅ 全部测试通过
+  - [x] GET `/api/v1/projects/{projectId}/files` - 获取项目文件树
+  - [x] POST `/api/v1/projects/{projectId}/files/nodes` - 创建文件/目录节点  
+  - [x] PUT `/api/v1/projects/{projectId}/files/nodes` - 更新节点信息(重命名)
+  - [x] PUT `/api/v1/projects/{projectId}/files/nodes/move` - 移动文件/目录节点
+  - [x] DELETE `/api/v1/projects/{projectId}/files/nodes` - 删除节点
+  - [x] GET `/api/v1/projects/{projectId}/files/children` - 获取子节点
 
-### 7.2 服务间协调和集成 🔗 微服务通信
+### 7.2 服务间协调和集成 🔗 微服务通信 ✅ 项目服务端已完成
 
-- [ ] **项目服务 → 文件服务集成**
-  - [ ] 添加FileServiceClient (OpenFeign)
-  - [ ] 创建文件节点时同步创建物理文件
-  - [ ] 删除文件节点时同步清理物理文件
-  - [ ] 文件内容操作的服务代理转发
+- [x] **RabbitMQ消息队列集成** ✅ 2025-09-13完成
+  - [x] 完整的消息队列配置 (生产者、消费者、死信队列)
+  - [x] Jackson LocalDateTime序列化问题修复
+  - [x] 异步文件操作消息发送集成
 
-- [ ] **API网关路由配置**
-  - [ ] 更新gateway路由配置支持文件树接口
-  - [ ] 确保统一的8080端口访问
-  - [ ] 测试端到端API调用链路
-  - [ ] 验证权限控制和错误处理
+- [x] **项目服务 → 文件服务集成** ✅ 项目服务端完成
+  - [x] 添加FileServiceClient (OpenFeign)
+  - [x] 异步文件创建、删除消息队列通知
+  - [x] 文件内容操作的服务代理转发
+  - [x] 回调消息处理机制实现
+
+- [ ] **文件服务消息队列集成** 🚧 待开发
+  - [ ] 在文件服务中添加RabbitMQ配置
+  - [ ] 实现消息消费者处理文件操作
+  - [ ] 实现回调消息发送机制
 
 ### 7.3 前端集成和功能完善 🖥️ 用户界面
 

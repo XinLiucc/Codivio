@@ -4,10 +4,14 @@ server:
 spring:
   application:
     name: project-service
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.web.tomcat.TomcatMetricsAutoConfiguration
   
   # 数据源配置 - 使用项目服务专用数据库
   datasource:
-    url: jdbc:mysql://localhost:3306/codivio_project?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://codivio-mysql:3306/codivio_project?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
     username: codivio
     password: codivio123
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -29,6 +33,26 @@ spring:
       hibernate:
         format_sql: true
 
+  # RabbitMQ配置
+  rabbitmq:
+    host: codivio-rabbitmq  # Docker环境使用容器名
+    port: 5672
+    username: codivio
+    password: codivio123
+    virtual-host: /codivio
+    # 连接池配置
+    connection-timeout: 15000
+    # 生产者确认
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    # 消费者确认
+    listener:
+      simple:
+        acknowledge-mode: manual
+        retry:
+          enabled: true
+          max-attempts: 3
+
 # 日志配置
 logging:
   level:
@@ -43,3 +67,10 @@ management:
   endpoint:
     health:
       show-details: always
+  metrics:
+    export:
+      defaults:
+        enabled: false
+  system:
+    processor:
+      enabled: false

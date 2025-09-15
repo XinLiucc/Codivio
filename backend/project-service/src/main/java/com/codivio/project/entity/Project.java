@@ -49,6 +49,24 @@ public class Project {
     private Integer status = 1;
 
     /**
+     * 成员数量 - 默认为1
+     */
+    @Column(name = "member_count")
+    private Integer memberCount = 1;
+
+    /**
+     * 文件数量 - 默认为0
+     */
+    @Column(name = "file_count")
+    private Integer fileCount = 0;
+
+    /**
+     * 最后活动时间
+     */
+    @Column(name = "last_activity_at")
+    private LocalDateTime lastActivityAt;
+
+    /**
      * 创建时间 - 非空，不可更新
      */
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -147,5 +165,29 @@ public class Project {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Integer getMemberCount() {
+        return memberCount;
+    }
+
+    public void setMemberCount(Integer memberCount) {
+        this.memberCount = memberCount;
+    }
+
+    public Integer getFileCount() {
+        return fileCount;
+    }
+
+    public void setFileCount(Integer fileCount) {
+        this.fileCount = fileCount;
+    }
+
+    public LocalDateTime getLastActivityAt() {
+        return lastActivityAt;
+    }
+
+    public void setLastActivityAt(LocalDateTime lastActivityAt) {
+        this.lastActivityAt = lastActivityAt;
     }
 }
