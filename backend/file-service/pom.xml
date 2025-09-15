@@ -60,6 +60,13 @@
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
 
+        <!-- Spring Boot AMQP (RabbitMQ) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+            <version>${spring.boot.version}</version>
+        </dependency>
+
         <!-- JWT -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
@@ -86,12 +93,12 @@
         </dependency>
 
 
-        <!-- Spring Boot Actuator -->
-        <dependency>
+        <!-- Spring Boot Actuator - 暂时禁用以避免Docker兼容性问题 -->
+        <!-- <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
             <version>${spring.boot.version}</version>
-        </dependency>
+        </dependency> -->
 
         <!-- Logback Classic -->
         <dependency>

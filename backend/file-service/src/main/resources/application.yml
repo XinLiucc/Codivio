@@ -7,7 +7,7 @@ spring:
   
   # 数据源配置 - 使用文件服务专用数据库
   datasource:
-    url: jdbc:mysql://localhost:3306/codivio_file?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://codivio-mysql:3306/codivio_file?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
     username: codivio
     password: codivio123
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -29,6 +29,31 @@ spring:
       hibernate:
         format_sql: true
   
+  # RabbitMQ配置
+  rabbitmq:
+    host: codivio-rabbitmq
+    port: 5672
+    username: codivio
+    password: codivio123
+    virtual-host: /codivio
+    
+    # 生产者配置
+    publisher-confirm-type: correlated  # 启用确认机制
+    publisher-returns: true             # 启用返回机制
+    template:
+      mandatory: true                   # 强制路由
+      
+    # 消费者配置
+    listener:
+      simple:
+        acknowledge-mode: manual        # 手动确认
+        retry:
+          enabled: true
+          initial-interval: 1000ms
+          max-attempts: 3
+          multiplier: 2.0
+        default-requeue-rejected: false
+  
   # 文件上传配置
   servlet:
     multipart:
@@ -40,12 +65,12 @@ logging:
   level:
     com.codivio.file: INFO
 
-# Actuator 监控
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-  endpoint:
-    health:
-      show-details: always
+# 暂时禁用actuator以避免Docker兼容性问题
+# management:
+#   endpoints:
+#     web:
+#       exposure:
+#         include: health,info
+#   endpoint:
+#     health:
+#       show-details: always
