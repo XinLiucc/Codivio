@@ -12,8 +12,10 @@ import com.codivio.project.repository.ProjectMemberRepository;
 import com.codivio.project.repository.ProjectRepository;
 import com.codivio.project.service.ProjectFileTreeService;
 import com.codivio.project.service.FileOperationProducer;
+import com.codivio.project.event.FileOperationEvent;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -66,6 +68,12 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
      */
     @Autowired
     private FileOperationProducer fileOperationProducer;
+
+    /**
+     * 事件发布器 - 用于发布文件操作事件
+     */
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     // ================================ 查询相关方法实现 ================================
 
@@ -276,7 +284,7 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
         // 3. 构建父路径到子节点列表的映射
         Map<String, List<ProjectFileTree>> parentToChildrenMap = fileTreeNodes.stream()
             .collect(Collectors.groupingBy(
-                node -> node.getParentPath() == null ? "__ROOT__" : node.getParentPath()
+                node -> (node.getParentPath() == null || node.getParentPath().isEmpty()) ? "__ROOT__" : node.getParentPath()
             ));
 
         // 4. 递归构建树形结构 - 从根节点开始
@@ -673,16 +681,21 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
         // 9. 更新项目统计信息
         syncProjectFileStatistics(projectId);
 
-        // 10. 发送消息队列 - 异步创建物理文件/目录
+        // 10. 发布文件操作事件 - 在事务提交后异步执行文件操作
         try {
             if (type == FileTreeType.FILE) {
-                fileOperationProducer.sendCreateFileMessage(savedNode, userId);
+                eventPublisher.publishEvent(
+                    new FileOperationEvent(this, savedNode, userId, FileOperationEvent.OperationType.CREATE_FILE)
+                );
             } else if (type == FileTreeType.DIRECTORY) {
-                fileOperationProducer.sendCreateDirectoryMessage(savedNode, userId);
+                eventPublisher.publishEvent(
+                    new FileOperationEvent(this, savedNode, userId, FileOperationEvent.OperationType.CREATE_DIRECTORY)
+                );
             }
+            System.out.println("文件操作事件已发布，将在事务提交后执行: " + savedNode.getFilePath());
         } catch (Exception e) {
-            // 消息队列发送失败不影响主业务流程，记录日志即可
-            System.err.println("文件操作消息发送失败，但文件树节点已创建: " + e.getMessage());
+            // 事件发布失败不影响主业务流程，记录日志即可
+            System.err.println("文件操作事件发布失败，但文件树节点已创建: " + e.getMessage());
         }
 
         return savedNode;
@@ -763,6 +776,25 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
         // 10. 更新项目统计信息
         syncProjectFileStatistics(projectId);
 
+        // 11. 发布重命名事件 - 在事务提交后异步执行文件操作
+        try {
+            if (node.getType() == FileTreeType.FILE) {
+                eventPublisher.publishEvent(
+                    new FileOperationEvent(this, savedNode, userId, 
+                        FileOperationEvent.OperationType.RENAME_FILE, oldFilePath)
+                );
+            } else if (node.getType() == FileTreeType.DIRECTORY) {
+                eventPublisher.publishEvent(
+                    new FileOperationEvent(this, savedNode, userId, 
+                        FileOperationEvent.OperationType.RENAME_DIRECTORY, oldFilePath)
+                );
+            }
+            System.out.println("文件重命名事件已发布，将在事务提交后执行: " + oldFilePath + " -> " + newFilePath);
+        } catch (Exception e) {
+            // 事件发布失败不影响主业务流程，记录日志即可
+            System.err.println("文件重命名事件发布失败，但文件树节点已更新: " + e.getMessage());
+        }
+
         return savedNode;
     }
 
@@ -813,16 +845,21 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
         // 6. 更新项目统计信息
         syncProjectFileStatistics(projectId);
 
-        // 7. 发送消息队列异步删除物理文件/目录
+        // 7. 发布删除事件 - 在事务提交后异步执行文件操作
         try {
             if (node.getType() == FileTreeType.FILE) {
-                fileOperationProducer.sendDeleteFileMessage(node, userId);
+                eventPublisher.publishEvent(
+                    new FileOperationEvent(this, node, userId, FileOperationEvent.OperationType.DELETE_FILE)
+                );
             } else if (node.getType() == FileTreeType.DIRECTORY) {
-                fileOperationProducer.sendDeleteDirectoryMessage(node, userId);
+                eventPublisher.publishEvent(
+                    new FileOperationEvent(this, node, userId, FileOperationEvent.OperationType.DELETE_DIRECTORY)
+                );
             }
+            System.out.println("文件删除事件已发布，将在事务提交后执行: " + node.getFilePath());
         } catch (Exception e) {
-            // 消息队列发送失败不影响主业务流程，记录日志即可
-            System.err.println("删除文件操作消息发送失败，但文件树节点已删除: " + e.getMessage());
+            // 事件发布失败不影响主业务流程，记录日志即可
+            System.err.println("文件删除事件发布失败，但文件树节点已删除: " + e.getMessage());
         }
     }
 
