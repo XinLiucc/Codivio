@@ -155,10 +155,10 @@ public class FileOperationProducer {
      * 发送重命名文件消息
      * 
      * @param fileTreeNode 文件树节点
-     * @param oldFileName 原文件名
+     * @param oldFilePath 原文件路径
      * @param userId 操作用户ID
      */
-    public void sendRenameFileMessage(ProjectFileTree fileTreeNode, String oldFileName, Long userId) {
+    public void sendRenameFileMessage(ProjectFileTree fileTreeNode, String oldFilePath, Long userId) {
         FileOperationMessage message = new FileOperationMessage(
             FileOperationMessage.OperationType.RENAME_FILE,
             fileTreeNode.getProjectId(),
@@ -170,13 +170,40 @@ public class FileOperationProducer {
         
         message.setMessageId(generateMessageId());
         message.setFileId(fileTreeNode.getFileId());
-        message.setExtraData("{\"oldFileName\":\"" + oldFileName + "\"}");
+        message.setExtraData("{\"oldFilePath\":\"" + oldFilePath + "\"}");
         
         sendMessage(message);
         
-        logger.info("已发送重命名文件消息: projectId={}, oldName={}, newName={}, messageId={}", 
-                   fileTreeNode.getProjectId(), oldFileName, 
-                   fileTreeNode.getFileName(), message.getMessageId());
+        logger.info("已发送重命名文件消息: projectId={}, oldPath={}, newPath={}, messageId={}", 
+                   fileTreeNode.getProjectId(), oldFilePath, 
+                   fileTreeNode.getFilePath(), message.getMessageId());
+    }
+
+    /**
+     * 发送重命名目录消息
+     * 
+     * @param fileTreeNode 文件树节点
+     * @param oldFilePath 原文件路径
+     * @param userId 操作用户ID
+     */
+    public void sendRenameDirectoryMessage(ProjectFileTree fileTreeNode, String oldFilePath, Long userId) {
+        FileOperationMessage message = new FileOperationMessage(
+            FileOperationMessage.OperationType.RENAME_DIRECTORY,
+            fileTreeNode.getProjectId(),
+            fileTreeNode.getId(),
+            fileTreeNode.getFilePath(),
+            fileTreeNode.getFileName(),
+            userId
+        );
+        
+        message.setMessageId(generateMessageId());
+        message.setExtraData("{\"oldFilePath\":\"" + oldFilePath + "\"}");
+        
+        sendMessage(message);
+        
+        logger.info("已发送重命名目录消息: projectId={}, oldPath={}, newPath={}, messageId={}", 
+                   fileTreeNode.getProjectId(), oldFilePath, 
+                   fileTreeNode.getFilePath(), message.getMessageId());
     }
 
     /**
