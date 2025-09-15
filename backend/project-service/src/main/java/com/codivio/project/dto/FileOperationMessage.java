@@ -18,7 +18,8 @@ public class FileOperationMessage {
         CREATE_DIRECTORY("创建目录"),
         DELETE_DIRECTORY("删除目录"),
         MOVE_FILE("移动文件"),
-        RENAME_FILE("重命名文件");
+        RENAME_FILE("重命名文件"),
+        RENAME_DIRECTORY("重命名目录");
 
         private final String description;
 
