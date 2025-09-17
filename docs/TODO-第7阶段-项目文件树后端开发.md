@@ -5,8 +5,24 @@
 **当前阶段**: 第7阶段 - 项目文件树后端开发  
 **基础条件**: ✅ 前端Monaco Editor已集成 + ✅ project_file_tree数据表已创建  
 **开始时间**: 2025-09-11  
-**实际完成**: 2025-09-13  
-**当前进度**: 85% (项目服务消息队列集成已完成)
+**实际完成**: 2025-09-15  
+**当前进度**: 95% (事务性事件监听器已完成，文件服务集成已完成)
+
+---
+
+## 🏆 2025-09-15 重要里程碑 - 事务性事件监听器完成！
+
+### ✅ @TransactionalEventListener实现完成
+- **竞态条件问题解决** - 彻底消除了Thread.sleep硬编码延迟
+- **事务性事件系统** - 实现了AFTER_COMMIT阶段的事件监听
+- **Spring事件机制** - 使用ApplicationEventPublisher优雅地发布事件
+- **完整测试验证** - 端到端测试确认事务一致性和消息队列集成正常
+
+### 🔧 核心技术实现
+- **FileOperationEvent** - 定义文件操作事件类型和数据结构
+- **FileOperationEventListener** - 实现@TransactionalEventListener监听器
+- **ProjectFileTreeServiceImpl** - 集成事件发布机制替代直接消息调用
+- **文件服务完整集成** - FileOperationConsumer和FileCallbackProducer全部实现
 
 ---
 
@@ -19,6 +35,7 @@
 - **权限集成系统** - 与项目成员权限深度集成
 - **RabbitMQ完整集成** - 消息队列生产者和消费者框架已完成
 - **异步文件操作** - 文件创建、删除等操作通过消息队列异步处理
+- **事务性事件监听器** - 使用@TransactionalEventListener解决竞态条件问题
 
 ### 🔧 技术实现亮点
 - **18个专业Repository方法** - 支持复杂的层级查询和批量操作
@@ -27,6 +44,8 @@
 - **枚举类型修复** - 解决Java与MySQL枚举值大小写不匹配问题
 - **Jackson序列化修复** - 解决LocalDateTime在RabbitMQ中的序列化问题
 - **消息队列架构** - 完整的生产者、消费者、死信队列、回调机制
+- **@TransactionalEventListener** - 实现AFTER_COMMIT事件监听，消除竞态条件
+- **事务性事件发布** - 使用ApplicationEventPublisher替代硬编码延迟
 
 ### 📊 API测试结果
 - ✅ 获取完整文件树 - 完美层级结构
@@ -101,12 +120,13 @@
   - [x] 实现FileCallbackConsumer回调消息处理
   - [x] 集成异步文件操作到所有CRUD接口
 
-- [ ] **文件服务消息队列集成** 🚧 待开发
-  - [ ] 在文件服务中添加RabbitMQ配置和依赖
-  - [ ] 实现FileOperationConsumer消息消费者
-  - [ ] 实现物理文件创建、删除操作逻辑
-  - [ ] 实现回调消息发送机制
-  - [ ] 测试完整的异步文件操作流程
+- [x] **文件服务消息队列集成** ✅ 2025-09-15完成
+  - [x] 在文件服务中添加RabbitMQ配置和依赖
+  - [x] 实现FileOperationConsumer消息消费者
+  - [x] 实现物理文件创建、删除操作逻辑
+  - [x] 实现回调消息发送机制
+  - [x] 测试完整的异步文件操作流程
+  - [x] 实现@TransactionalEventListener事务性事件监听
 
 - [ ] **API网关路由配置更新**
   - [ ] 更新gateway-service路由配置支持新的文件树接口
