@@ -118,4 +118,4 @@ rabbitmq_data/
 .env.production.local
 
 # Database data
-data/
+data/out/

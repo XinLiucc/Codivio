@@ -7,7 +7,7 @@ spring:
   
   # 数据源配置 - 使用文件服务专用数据库
   datasource:
-    url: jdbc:mysql://codivio-mysql:3306/codivio_file?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3306/codivio_file?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
     username: codivio
     password: codivio123
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -31,7 +31,7 @@ spring:
   
   # RabbitMQ配置
   rabbitmq:
-    host: codivio-rabbitmq
+    host: localhost
     port: 5672
     username: codivio
     password: codivio123
