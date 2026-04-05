@@ -46,7 +46,7 @@ public interface ProjectService {
      * @return 项目详细信息
      * @throws RuntimeException 当项目不存在或无访问权限时抛出异常
      */
-    ProjectResponseDTO getProjectById(Long projectId, Long userId);
+    ProjectResponseDTO getProjectById(String projectId, Long userId);
     
     /**
      * 获取用户的项目列表
@@ -77,7 +77,7 @@ public interface ProjectService {
      * @return 更新后的项目信息
      * @throws RuntimeException 当项目不存在、无权限或名称重复时抛出异常
      */
-    ProjectResponseDTO updateProject(Long projectId, ProjectUpdateDTO updateDTO, Long userId);
+    ProjectResponseDTO updateProject(String projectId, ProjectUpdateDTO updateDTO, Long userId);
     
     /**
      * 删除项目
@@ -92,7 +92,7 @@ public interface ProjectService {
      * @param userId 当前用户ID（必须是项目所有者）
      * @throws RuntimeException 当项目不存在或无权限时抛出异常
      */
-    void deleteProject(Long projectId, Long userId);
+    void deleteProject(String projectId, Long userId);
     
     /**
      * 检查用户是否为项目成员
@@ -101,7 +101,7 @@ public interface ProjectService {
      * @param userId 用户ID
      * @return true-是成员，false-不是成员
      */
-    boolean isProjectMember(Long projectId, Long userId);
+    boolean isProjectMember(String projectId, Long userId);
     
     /**
      * 检查用户是否为项目所有者
@@ -110,7 +110,7 @@ public interface ProjectService {
      * @param userId 用户ID
      * @return true-是所有者，false-不是所有者
      */
-    boolean isProjectOwner(Long projectId, Long userId);
+    boolean isProjectOwner(String projectId, Long userId);
     
     /**
      * 获取项目成员列表
@@ -118,7 +118,7 @@ public interface ProjectService {
      * @param projectId 项目ID
      * @return 项目成员列表
      */
-    List<ProjectMemberDTO> getProjectMembers(Long projectId);
+    List<ProjectMemberDTO> getProjectMembers(String projectId);
     
     /**
      * 添加项目成员
@@ -126,7 +126,7 @@ public interface ProjectService {
      * @param projectId 项目ID
      * @param addMemberDTO 添加成员数据
      */
-    void addMember(Long projectId, AddMemberDTO addMemberDTO);
+    void addMember(String projectId, AddMemberDTO addMemberDTO);
     
     /**
      * 更新成员角色
@@ -135,7 +135,7 @@ public interface ProjectService {
      * @param userId 成员用户ID
      * @param newRole 新角色
      */
-    void updateMemberRole(Long projectId, Long userId, ProjectRole newRole);
+    void updateMemberRole(String projectId, Long userId, ProjectRole newRole);
     
     /**
      * 移除项目成员
@@ -143,5 +143,5 @@ public interface ProjectService {
      * @param projectId 项目ID
      * @param userId 要移除的成员用户ID
      */
-    void removeMember(Long projectId, Long userId);
+    void removeMember(String projectId, Long userId);
 }

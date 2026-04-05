@@ -26,7 +26,7 @@ public interface ProjectFileTreeRepository extends JpaRepository<ProjectFileTree
      * @return 子节点列表，目录在前，文件在后
      */
     List<ProjectFileTree> findByProjectIdAndParentPathOrderByTypeDescFileNameAsc(
-            Long projectId, String parentPath);
+            String projectId, String parentPath);
 
     /**
      * 根据项目ID查询整个项目的文件树
@@ -35,7 +35,7 @@ public interface ProjectFileTreeRepository extends JpaRepository<ProjectFileTree
      * @param projectId 项目ID
      * @return 完整的文件树列表
      */
-    List<ProjectFileTree> findByProjectIdOrderByFilePathAsc(Long projectId);
+    List<ProjectFileTree> findByProjectIdOrderByFilePathAsc(String projectId);
 
     /**
      * 根据项目ID和文件路径查找特定节点
@@ -45,7 +45,7 @@ public interface ProjectFileTreeRepository extends JpaRepository<ProjectFileTree
      * @param filePath 文件路径
      * @return 文件树节点（可能为空）
      */
-    Optional<ProjectFileTree> findByProjectIdAndFilePath(Long projectId, String filePath);
+    Optional<ProjectFileTree> findByProjectIdAndFilePath(String projectId, String filePath);
 
     /**
      * 检查指定路径是否存在
@@ -55,7 +55,7 @@ public interface ProjectFileTreeRepository extends JpaRepository<ProjectFileTree
      * @param filePath 文件路径
      * @return true-存在，false-不存在
      */
-    boolean existsByProjectIdAndFilePath(Long projectId, String filePath);
+    boolean existsByProjectIdAndFilePath(String projectId, String filePath);
 
     /**
      * 根据项目ID和父路径检查是否存在子节点
@@ -65,7 +65,7 @@ public interface ProjectFileTreeRepository extends JpaRepository<ProjectFileTree
      * @param parentPath 父级路径
      * @return true-存在子节点，false-无子节点
      */
-    boolean existsByProjectIdAndParentPath(Long projectId, String parentPath);
+    boolean existsByProjectIdAndParentPath(String projectId, String parentPath);
 
     /**
      * 根据文件服务ID查找文件树节点
@@ -88,7 +88,7 @@ public interface ProjectFileTreeRepository extends JpaRepository<ProjectFileTree
     @Query("DELETE FROM ProjectFileTree pft WHERE pft.projectId = :projectId " +
            "AND (pft.filePath = :filePath OR pft.filePath LIKE CONCAT(:filePath, '/%'))")
     int deleteByProjectIdAndFilePathStartingWith(
-            @Param("projectId") Long projectId, 
+            @Param("projectId") String projectId,
             @Param("filePath") String filePath);
 
     /**
@@ -99,7 +99,7 @@ public interface ProjectFileTreeRepository extends JpaRepository<ProjectFileTree
      * @param parentPath 父级路径
      * @return 子节点数量
      */
-    long countByProjectIdAndParentPath(Long projectId, String parentPath);
+    long countByProjectIdAndParentPath(String projectId, String parentPath);
 
     /**
      * 根据项目ID查询根目录节点（父路径为null的节点）
@@ -109,7 +109,7 @@ public interface ProjectFileTreeRepository extends JpaRepository<ProjectFileTree
      * @return 根目录节点列表
      */
     List<ProjectFileTree> findByProjectIdAndParentPathIsNullOrderByTypeDescFileNameAsc(
-            Long projectId);
+            String projectId);
 
     /**
      * 查询指定路径下的所有子节点（包括多级子节点）
@@ -123,7 +123,7 @@ public interface ProjectFileTreeRepository extends JpaRepository<ProjectFileTree
            "AND pft.filePath LIKE CONCAT(:parentPath, '/%') " +
            "ORDER BY pft.filePath ASC")
     List<ProjectFileTree> findAllChildrenByProjectIdAndParentPath(
-            @Param("projectId") Long projectId, 
+            @Param("projectId") String projectId,
             @Param("parentPath") String parentPath);
 
     /**
@@ -134,7 +134,7 @@ public interface ProjectFileTreeRepository extends JpaRepository<ProjectFileTree
      * @param type 节点类型
      * @return 指定类型的节点列表
      */
-    List<ProjectFileTree> findByProjectIdAndType(Long projectId, ProjectFileTree.FileTreeType type);
+    List<ProjectFileTree> findByProjectIdAndType(String projectId, ProjectFileTree.FileTreeType type);
 
     /**
      * 统计项目中的文件数量（不包括目录）
@@ -142,7 +142,7 @@ public interface ProjectFileTreeRepository extends JpaRepository<ProjectFileTree
      * @param projectId 项目ID
      * @return 文件数量
      */
-    long countByProjectIdAndType(Long projectId, ProjectFileTree.FileTreeType type);
+    long countByProjectIdAndType(String projectId, ProjectFileTree.FileTreeType type);
 
     /**
      * 批量更新父路径
@@ -164,7 +164,7 @@ public interface ProjectFileTreeRepository extends JpaRepository<ProjectFileTree
            "WHERE pft.projectId = :projectId " +
            "AND (pft.parentPath = :oldParentPath OR pft.parentPath LIKE CONCAT(:oldParentPath, '/%'))")
     int updateParentPathByProjectIdAndOldParentPath(
-            @Param("projectId") Long projectId,
+            @Param("projectId") String projectId,
             @Param("oldParentPath") String oldParentPath,
             @Param("newParentPath") String newParentPath);
 
@@ -188,7 +188,7 @@ public interface ProjectFileTreeRepository extends JpaRepository<ProjectFileTree
            "WHERE pft.projectId = :projectId " +
            "AND (pft.filePath = :oldFilePath OR pft.filePath LIKE CONCAT(:oldFilePath, '/%'))")
     int updateFilePathByProjectIdAndOldFilePath(
-            @Param("projectId") Long projectId,
+            @Param("projectId") String projectId,
             @Param("oldFilePath") String oldFilePath,
             @Param("newFilePath") String newFilePath);
 
@@ -204,7 +204,7 @@ public interface ProjectFileTreeRepository extends JpaRepository<ProjectFileTree
            "AND pft.filePath LIKE CONCAT(:pathPrefix, '%') " +
            "ORDER BY pft.filePath ASC")
     List<ProjectFileTree> findByProjectIdAndFilePathStartingWith(
-            @Param("projectId") Long projectId, 
+            @Param("projectId") String projectId,
             @Param("pathPrefix") String pathPrefix);
 
     /**
@@ -215,7 +215,7 @@ public interface ProjectFileTreeRepository extends JpaRepository<ProjectFileTree
      * @param parentPath 父级路径
      * @return 子节点列表
      */
-    List<ProjectFileTree> findByProjectIdAndParentPath(Long projectId, String parentPath);
+    List<ProjectFileTree> findByProjectIdAndParentPath(String projectId, String parentPath);
 
     /**
      * 根据项目ID删除整个项目的文件树
@@ -225,5 +225,5 @@ public interface ProjectFileTreeRepository extends JpaRepository<ProjectFileTree
      * @return 删除的记录数
      */
     @Modifying
-    int deleteByProjectId(Long projectId);
+    int deleteByProjectId(String projectId);
 }

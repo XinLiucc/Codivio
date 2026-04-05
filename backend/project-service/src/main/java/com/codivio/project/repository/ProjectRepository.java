@@ -15,7 +15,7 @@ import java.util.List;
  * 基于Spring Data JPA
  */
 @Repository
-public interface ProjectRepository extends JpaRepository<Project, Long> {
+public interface ProjectRepository extends JpaRepository<Project, String> {
 
     /**
      * 根据所有者ID查找项目列表
@@ -69,10 +69,10 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
      * @return 项目信息（可能为空）
      */
     @Query("SELECT p FROM Project p WHERE p.id = :id AND p.ownerId = :ownerId")
-    Project findByIdAndOwnerId(@Param("id") Long id, @Param("ownerId") Long ownerId);
+    Project findByIdAndOwnerId(@Param("id") String id, @Param("ownerId") Long ownerId);
 
-    Project getProjectById(Long id);
-    
+    Project getProjectById(String id);
+
     /**
      * 检查项目名称重复（排除指定项目ID）
      * @param ownerId 所有者ID
@@ -80,5 +80,5 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
      * @param excludeId 排除的项目ID
      * @return true-存在重复，false-不重复
      */
-    boolean existsByOwnerIdAndNameAndIdNot(Long ownerId, String name, Long excludeId);
+    boolean existsByOwnerIdAndNameAndIdNot(Long ownerId, String name, String excludeId);
 }

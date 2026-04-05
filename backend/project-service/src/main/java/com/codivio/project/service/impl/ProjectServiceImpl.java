@@ -16,6 +16,7 @@ import com.codivio.project.exception.ErrorCode;
 import com.codivio.project.repository.ProjectRepository;
 import com.codivio.project.repository.ProjectMemberRepository;
 import com.codivio.project.service.ProjectService;
+import com.codivio.project.util.SnowflakeIdGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,12 +35,15 @@ public class ProjectServiceImpl implements ProjectService {
     
     @Autowired
     private ProjectRepository projectRepository;
-    
+
     @Autowired
     private ProjectMemberRepository projectMemberRepository;
-    
+
     @Autowired
     private UserServiceClient userServiceClient;
+
+    @Autowired
+    private SnowflakeIdGenerator snowflakeIdGenerator;
 
     @Override
     @Transactional
@@ -51,6 +55,7 @@ public class ProjectServiceImpl implements ProjectService {
         
         // 2. 创建项目实体并设置属性
         Project project = new Project();
+        project.setId(snowflakeIdGenerator.nextIdString());
         project.setName(createDTO.getName());
         project.setDescription(createDTO.getDescription());
         project.setLanguage(createDTO.getLanguage());
@@ -90,7 +95,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectResponseDTO getProjectById(Long projectId, Long userId) {
+    public ProjectResponseDTO getProjectById(String projectId, Long userId) {
         // 1. 根据ID查找项目
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new BaseBusinessException(ErrorCode.PROJECT_NOT_FOUND));
@@ -122,7 +127,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional
-    public ProjectResponseDTO updateProject(Long projectId, ProjectUpdateDTO updateDTO, Long userId) {
+    public ProjectResponseDTO updateProject(String projectId, ProjectUpdateDTO updateDTO, Long userId) {
         // 1. 检查项目是否存在
         if (!projectRepository.existsById(projectId)) {
             throw new BaseBusinessException(ErrorCode.PROJECT_NOT_FOUND);
@@ -168,7 +173,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional
-    public void deleteProject(Long projectId, Long userId) {
+    public void deleteProject(String projectId, Long userId) {
         // 1. 检查项目是否存在
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new BaseBusinessException(ErrorCode.PROJECT_NOT_FOUND));
@@ -189,12 +194,12 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public boolean isProjectMember(Long projectId, Long userId) {
+    public boolean isProjectMember(String projectId, Long userId) {
         return projectMemberRepository.existsByProjectIdAndUserId(projectId, userId);
     }
 
     @Override
-    public boolean isProjectOwner(Long projectId, Long userId) {
+    public boolean isProjectOwner(String projectId, Long userId) {
         Project project = projectRepository.findById(projectId).orElse(null);
         return project != null && project.getOwnerId().equals(userId);
     }
@@ -202,7 +207,7 @@ public class ProjectServiceImpl implements ProjectService {
     /**
      * 检查用户是否可以编辑项目（OWNER 或 EDITOR）
      */
-    private boolean canUserEditProject(Long projectId, Long userId) {
+    private boolean canUserEditProject(String projectId, Long userId) {
         // 1. 检查是否是项目所有者
         if (isProjectOwner(projectId, userId)) {
             return true;
@@ -215,7 +220,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProjectMemberDTO> getProjectMembers(Long projectId) {
+    public List<ProjectMemberDTO> getProjectMembers(String projectId) {
         // 1. 检查项目是否存在
         if(!projectRepository.existsById(projectId)) {
             throw new BaseBusinessException(ErrorCode.PROJECT_NOT_FOUND);
@@ -241,7 +246,7 @@ public class ProjectServiceImpl implements ProjectService {
     
     @Override
     @Transactional
-    public void addMember(Long projectId, AddMemberDTO addMemberDTO) {
+    public void addMember(String projectId, AddMemberDTO addMemberDTO) {
         // 1. 检查项目是否存在
         if(!projectRepository.existsById(projectId)) {
             throw new BaseBusinessException(ErrorCode.PROJECT_NOT_FOUND);
@@ -280,7 +285,7 @@ public class ProjectServiceImpl implements ProjectService {
     
     @Override
     @Transactional
-    public void updateMemberRole(Long projectId, Long userId, ProjectRole newRole) {
+    public void updateMemberRole(String projectId, Long userId, ProjectRole newRole) {
         // 1. 检查项目是否存在
         if(!projectRepository.existsById(projectId)) {
             throw new BaseBusinessException(ErrorCode.PROJECT_NOT_FOUND);
@@ -309,7 +314,7 @@ public class ProjectServiceImpl implements ProjectService {
     
     @Override
     @Transactional
-    public void removeMember(Long projectId, Long userId) {
+    public void removeMember(String projectId, Long userId) {
         // 1. 检查项目是否存在
         if(!projectRepository.existsById(projectId)) {
             throw new BaseBusinessException(ErrorCode.PROJECT_NOT_FOUND);

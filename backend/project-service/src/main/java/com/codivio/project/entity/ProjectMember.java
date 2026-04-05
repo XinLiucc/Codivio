@@ -22,8 +22,8 @@ public class ProjectMember {
     /**
      * 项目ID - 非空，关联projects表
      */
-    @Column(name = "project_id", nullable = false)
-    private Long projectId;
+    @Column(name = "project_id", nullable = false, length = 32)
+    private String projectId;
 
     /**
      * 用户ID - 非空，关联用户服务的用户ID
@@ -47,7 +47,7 @@ public class ProjectMember {
     // 构造函数
     public ProjectMember() {}
 
-    public ProjectMember(Long projectId, Long userId, ProjectRole role) {
+    public ProjectMember(String projectId, Long userId, ProjectRole role) {
         this.projectId = projectId;
         this.userId = userId;
         this.role = role;
@@ -73,11 +73,11 @@ public class ProjectMember {
         this.id = id;
     }
 
-    public Long getProjectId() {
+    public String getProjectId() {
         return projectId;
     }
 
-    public void setProjectId(Long projectId) {
+    public void setProjectId(String projectId) {
         this.projectId = projectId;
     }
 

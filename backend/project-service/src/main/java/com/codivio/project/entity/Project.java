@@ -12,11 +12,11 @@ import java.time.LocalDateTime;
 public class Project {
 
     /**
-     * 项目ID - 主键，自增
+     * 项目ID - 主键，雪花算法生成（VARCHAR 32）
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id", length = 32)
+    private String id;
 
     /**
      * 项目名称 - 非空，长度限制100字符
@@ -103,11 +103,11 @@ public class Project {
 
     // Getter和Setter方法
     
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

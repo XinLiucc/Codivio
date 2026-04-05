@@ -44,7 +44,7 @@ public class FileOperationMessage {
     /**
      * 项目ID
      */
-    private Long projectId;
+    private String projectId;
 
     /**
      * 文件树节点ID
@@ -97,7 +97,7 @@ public class FileOperationMessage {
         this.createdAt = LocalDateTime.now();
     }
 
-    public FileOperationMessage(OperationType operationType, Long projectId, 
+    public FileOperationMessage(OperationType operationType, String projectId,
                                Long fileTreeNodeId, String filePath, String fileName, Long userId) {
         this();
         this.operationType = operationType;
@@ -126,11 +126,11 @@ public class FileOperationMessage {
         this.operationType = operationType;
     }
 
-    public Long getProjectId() {
+    public String getProjectId() {
         return projectId;
     }
 
-    public void setProjectId(Long projectId) {
+    public void setProjectId(String projectId) {
         this.projectId = projectId;
     }
 

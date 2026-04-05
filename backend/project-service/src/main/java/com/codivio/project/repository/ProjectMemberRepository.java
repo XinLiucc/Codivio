@@ -22,7 +22,7 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Lo
      * @param projectId 项目ID
      * @return 项目成员列表
      */
-    List<ProjectMember> findByProjectId(Long projectId);
+    List<ProjectMember> findByProjectId(String projectId);
 
     /**
      * 根据用户ID查找参与的所有项目
@@ -37,7 +37,7 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Lo
      * @param userId 用户ID
      * @return 成员记录（可能为空）
      */
-    Optional<ProjectMember> findByProjectIdAndUserId(Long projectId, Long userId);
+    Optional<ProjectMember> findByProjectIdAndUserId(String projectId, Long userId);
 
     /**
      * 根据项目ID和角色查找成员
@@ -45,14 +45,14 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Lo
      * @param role 成员角色
      * @return 指定角色的成员列表
      */
-    List<ProjectMember> findByProjectIdAndRole(Long projectId, ProjectRole role);
+    List<ProjectMember> findByProjectIdAndRole(String projectId, ProjectRole role);
 
     /**
      * 统计项目成员数量
      * @param projectId 项目ID
      * @return 成员数量
      */
-    long countByProjectId(Long projectId);
+    long countByProjectId(String projectId);
 
     /**
      * 检查用户是否是项目成员
@@ -60,7 +60,7 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Lo
      * @param userId 用户ID
      * @return true-是成员，false-不是成员
      */
-    boolean existsByProjectIdAndUserId(Long projectId, Long userId);
+    boolean existsByProjectIdAndUserId(String projectId, Long userId);
 
     /**
      * 查找项目的所有者
@@ -68,7 +68,7 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Lo
      * @return 项目所有者记录（可能为空）
      */
     @Query("SELECT pm FROM ProjectMember pm WHERE pm.projectId = :projectId AND pm.role = 'OWNER'")
-    Optional<ProjectMember> findOwnerByProjectId(@Param("projectId") Long projectId);
+    Optional<ProjectMember> findOwnerByProjectId(@Param("projectId") String projectId);
 
     /**
      * 根据用户ID和角色查找项目列表
@@ -85,5 +85,5 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Lo
      * @param roles 角色列表
      * @return true-用户具有指定角色之一，false-不具有
      */
-    boolean existsByProjectIdAndUserIdAndRoleIn(Long projectId, Long userId, List<ProjectRole> roles);
+    boolean existsByProjectIdAndUserIdAndRoleIn(String projectId, Long userId, List<ProjectRole> roles);
 }
