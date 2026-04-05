@@ -93,6 +93,7 @@ jspm_packages/
 *.ipr
 .vscode/
 out/
+out/
 
 # OS
 .DS_Store
