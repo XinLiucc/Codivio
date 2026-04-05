@@ -44,7 +44,7 @@ public class FileProxyController {
      */
     @GetMapping("/content")
     public ResultVO<Map<String, Object>> getFileContent(
-            @PathVariable Long projectId,
+            @PathVariable String projectId,
             @RequestParam String filePath,
             @RequestHeader("X-User-Id") Long userId) {
         
@@ -103,7 +103,7 @@ public class FileProxyController {
      */
     @PutMapping("/content")
     public ResultVO<Void> saveFileContent(
-            @PathVariable Long projectId,
+            @PathVariable String projectId,
             @RequestParam String filePath,
             @RequestBody Map<String, Object> content,
             @RequestHeader("X-User-Id") Long userId) {
@@ -167,7 +167,7 @@ public class FileProxyController {
      */
     @GetMapping("/exists")
     public ResultVO<Boolean> checkFileExists(
-            @PathVariable Long projectId,
+            @PathVariable String projectId,
             @RequestParam String filePath,
             @RequestHeader("X-User-Id") Long userId) {
         

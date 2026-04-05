@@ -99,7 +99,7 @@ public class ProjectFileTreeController {
 
         // 调用服务获取文件树
         Map<String, Object> fileTree = projectFileTreeService
-            .getProjectFileTree(Long.valueOf(projectId), userId);
+            .getProjectFileTree(projectId, userId);
 
         return ResultVO.success(fileTree, "获取文件树成功");
     }
@@ -143,7 +143,7 @@ public class ProjectFileTreeController {
 
         // 调用服务获取子节点
         List<ProjectFileTree> children = projectFileTreeService
-            .getChildrenByParentPath(Long.valueOf(projectId), parentPath, userId);
+            .getChildrenByParentPath(projectId, parentPath, userId);
 
         return ResultVO.success(children, "获取子节点成功");
     }
@@ -202,7 +202,7 @@ public class ProjectFileTreeController {
 
         // 调用服务创建节点
         ProjectFileTree createdNode = projectFileTreeService.createFileTreeNode(
-            Long.valueOf(projectId), 
+            projectId, 
             request.getFilePath(), 
             request.getFileName(), 
             request.getParentPath(), 
@@ -261,7 +261,7 @@ public class ProjectFileTreeController {
 
         // 调用服务重命名节点
         ProjectFileTree renamedNode = projectFileTreeService.renameFileTreeNode(
-            Long.valueOf(projectId), 
+            projectId, 
             request.getFilePath(), 
             request.getNewFileName(), 
             userId
@@ -309,7 +309,7 @@ public class ProjectFileTreeController {
         }
 
         // 调用服务删除节点
-        projectFileTreeService.deleteFileTreeNode(Long.valueOf(projectId), filePath, userId);
+        projectFileTreeService.deleteFileTreeNode(projectId, filePath, userId);
 
         return ResultVO.success(null, "删除节点成功");
     }
@@ -363,7 +363,7 @@ public class ProjectFileTreeController {
 
         // 调用服务移动节点
         ProjectFileTree movedNode = projectFileTreeService.moveFileTreeNode(
-            Long.valueOf(projectId), 
+            projectId, 
             request.getSourcePath(), 
             request.getTargetParentPath(), 
             userId

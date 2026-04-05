@@ -17,7 +17,7 @@ public class ProjectMemberDTO {
     /**
      * 项目ID
      */
-    private Long projectId;
+    private String projectId;
     
     /**
      * 用户ID
@@ -37,7 +37,7 @@ public class ProjectMemberDTO {
     // 构造方法
     public ProjectMemberDTO() {}
     
-    public ProjectMemberDTO(Long id, Long projectId, Long userId, ProjectRole role, LocalDateTime joinedAt) {
+    public ProjectMemberDTO(Long id, String projectId, Long userId, ProjectRole role, LocalDateTime joinedAt) {
         this.id = id;
         this.projectId = projectId;
         this.userId = userId;
@@ -54,11 +54,11 @@ public class ProjectMemberDTO {
         this.id = id;
     }
     
-    public Long getProjectId() {
+    public String getProjectId() {
         return projectId;
     }
-    
-    public void setProjectId(Long projectId) {
+
+    public void setProjectId(String projectId) {
         this.projectId = projectId;
     }
     

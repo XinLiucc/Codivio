@@ -93,7 +93,7 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Object> getProjectFileTree(Long projectId, Long userId) {
+    public Map<String, Object> getProjectFileTree(String projectId, Long userId) {
         // 1. 参数验证
         if (projectId == null) {
             throw new IllegalArgumentException("项目ID不能为空");
@@ -130,7 +130,7 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<ProjectFileTree> getChildrenByParentPath(Long projectId, String parentPath, Long userId) {
+    public List<ProjectFileTree> getChildrenByParentPath(String projectId, String parentPath, Long userId) {
         // 1. 参数验证
         if (projectId == null) {
             throw new IllegalArgumentException("项目ID不能为空");
@@ -192,7 +192,7 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
      */
     @Override
     @Transactional(readOnly = true)
-    public boolean hasAccessPermission(Long projectId, Long userId) {
+    public boolean hasAccessPermission(String projectId, Long userId) {
         if (projectId == null || userId == null) {
             return false;
         }
@@ -217,7 +217,7 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
      */
     @Override
     @Transactional(readOnly = true)
-    public boolean hasEditPermission(Long projectId, Long userId) {
+    public boolean hasEditPermission(String projectId, Long userId) {
         if (projectId == null || userId == null) {
             return false;
         }
@@ -383,7 +383,7 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
      */
     @Override
     @Transactional
-    public void updateFileEditInfo(Long projectId, String filePath, Long userId) {
+    public void updateFileEditInfo(String projectId, String filePath, Long userId) {
         // 参数验证
         if (projectId == null) {
             throw new IllegalArgumentException("项目ID不能为空");
@@ -427,7 +427,7 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
      */
     @Override
     @Transactional
-    public void syncProjectFileStatistics(Long projectId) {
+    public void syncProjectFileStatistics(String projectId) {
         if (projectId == null) {
             throw new IllegalArgumentException("项目ID不能为空");
         }
@@ -466,7 +466,7 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
      * @param targetPath 目标路径，不能为空
      * @param userId 操作用户ID，不能为空
      */
-    private void createMissingParentDirectories(Long projectId, String targetPath, Long userId) {
+    private void createMissingParentDirectories(String projectId, String targetPath, Long userId) {
         if (!StringUtils.hasText(targetPath) || targetPath.equals("/")) {
             return;  // 根目录不需要创建
         }
@@ -518,7 +518,7 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
      * @param oldParentPath 原父路径，不能为空
      * @param newParentPath 新父路径，不能为空
      */
-    private void updateChildrenPathsAfterRename(Long projectId, String oldParentPath, String newParentPath) {
+    private void updateChildrenPathsAfterRename(String projectId, String oldParentPath, String newParentPath) {
         // 查找所有以旧路径开头的子节点
         List<ProjectFileTree> childNodes = projectFileTreeRepository
             .findByProjectIdAndFilePathStartingWith(projectId, oldParentPath + "/");
@@ -572,7 +572,7 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
      * @param projectId 项目ID，不能为空
      * @param parentPath 父目录路径，不能为空
      */
-    private void deleteChildrenRecursively(Long projectId, String parentPath) {
+    private void deleteChildrenRecursively(String projectId, String parentPath) {
         // 查找直接子节点
         List<ProjectFileTree> children = projectFileTreeRepository
             .findByProjectIdAndParentPath(projectId, parentPath);
@@ -597,7 +597,7 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
      * @param oldParentPath 原目录路径，不能为空
      * @param newParentPath 新目录路径，不能为空
      */
-    private void updateChildrenPathsAfterMove(Long projectId, String oldParentPath, String newParentPath) {
+    private void updateChildrenPathsAfterMove(String projectId, String oldParentPath, String newParentPath) {
         // 复用重命名时的路径更新逻辑
         updateChildrenPathsAfterRename(projectId, oldParentPath, newParentPath);
     }
@@ -606,7 +606,7 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
 
     @Override
     @Transactional
-    public ProjectFileTree createFileTreeNode(Long projectId, String filePath, String fileName, 
+    public ProjectFileTree createFileTreeNode(String projectId, String filePath, String fileName,
                                             String parentPath, FileTreeType type, Long userId) {
         // 1. 参数验证
         if (projectId == null) {
@@ -703,7 +703,7 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
 
     @Override
     @Transactional
-    public ProjectFileTree renameFileTreeNode(Long projectId, String oldFilePath, 
+    public ProjectFileTree renameFileTreeNode(String projectId, String oldFilePath,
                                             String newFileName, Long userId) {
         // 1. 参数验证
         if (projectId == null) {
@@ -800,7 +800,7 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
 
     @Override
     @Transactional
-    public void deleteFileTreeNode(Long projectId, String filePath, Long userId) {
+    public void deleteFileTreeNode(String projectId, String filePath, Long userId) {
         // 1. 参数验证
         if (projectId == null) {
             throw new IllegalArgumentException("项目ID不能为空");
@@ -865,7 +865,7 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
 
     @Override
     @Transactional
-    public ProjectFileTree moveFileTreeNode(Long projectId, String sourcePath, 
+    public ProjectFileTree moveFileTreeNode(String projectId, String sourcePath,
                                           String targetParentPath, Long userId) {
         // 1. 参数验证
         if (projectId == null) {
@@ -965,7 +965,7 @@ public class ProjectFileTreeServiceImpl implements ProjectFileTreeService {
 
     @Override
     @Transactional
-    public void initializeProjectFileTree(Long projectId, String language, Long userId) {
+    public void initializeProjectFileTree(String projectId, String language, Long userId) {
         // TODO: 实现项目文件树初始化逻辑
         throw new UnsupportedOperationException("方法待实现");
     }

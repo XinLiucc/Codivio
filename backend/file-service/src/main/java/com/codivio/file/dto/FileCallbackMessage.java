@@ -51,7 +51,7 @@ public class FileCallbackMessage {
     /**
      * 项目ID
      */
-    private Long projectId;
+    private String projectId;
 
     /**
      * 文件树节点ID
@@ -95,9 +95,9 @@ public class FileCallbackMessage {
     }
 
     // 便捷构造函数 - 成功回调
-    public static FileCallbackMessage success(String originalMessageId, 
+    public static FileCallbackMessage success(String originalMessageId,
                                             FileOperationMessage.OperationType operationType,
-                                            Long projectId, Long fileTreeNodeId, 
+                                            String projectId, Long fileTreeNodeId,
                                             String filePath, String fileId) {
         FileCallbackMessage callback = new FileCallbackMessage();
         callback.setOriginalMessageId(originalMessageId);
@@ -111,9 +111,9 @@ public class FileCallbackMessage {
     }
 
     // 便捷构造函数 - 失败回调
-    public static FileCallbackMessage failed(String originalMessageId, 
+    public static FileCallbackMessage failed(String originalMessageId,
                                             FileOperationMessage.OperationType operationType,
-                                            Long projectId, Long fileTreeNodeId, 
+                                            String projectId, Long fileTreeNodeId,
                                             String filePath, String errorMessage) {
         FileCallbackMessage callback = new FileCallbackMessage();
         callback.setOriginalMessageId(originalMessageId);
@@ -160,11 +160,11 @@ public class FileCallbackMessage {
         this.operationType = operationType;
     }
 
-    public Long getProjectId() {
+    public String getProjectId() {
         return projectId;
     }
 
-    public void setProjectId(Long projectId) {
+    public void setProjectId(String projectId) {
         this.projectId = projectId;
     }
 

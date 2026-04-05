@@ -75,7 +75,7 @@ public class ProjectController {
      */
     @GetMapping("/{projectId}")
     public ResultVO<ProjectResponseDTO> getProject(
-            @PathVariable("projectId") Long projectId) {
+            @PathVariable("projectId") String projectId) {
         
         Long userId = gatewayUserUtil.getCurrentUserId();
         if (userId == null) {
@@ -96,7 +96,7 @@ public class ProjectController {
      */
     @PutMapping("/{projectId}")
     public ResultVO<ProjectResponseDTO> updateProject(
-            @PathVariable("projectId") Long projectId,
+            @PathVariable("projectId") String projectId,
             @Valid @RequestBody ProjectUpdateDTO updateDTO) {
         
         Long userId = gatewayUserUtil.getCurrentUserId();
@@ -117,7 +117,7 @@ public class ProjectController {
      */
     @DeleteMapping("/{projectId}")
     public ResultVO<Void> deleteProject(
-            @PathVariable("projectId") Long projectId) {
+            @PathVariable("projectId") String projectId) {
         
         Long userId = gatewayUserUtil.getCurrentUserId();
         if (userId == null) {
@@ -137,7 +137,7 @@ public class ProjectController {
      */
     @GetMapping("/{projectId}/members")
     public ResultVO<List<ProjectMemberDTO>> getProjectMembers(
-            @PathVariable("projectId") Long projectId
+            @PathVariable("projectId") String projectId
     ) {
         Long operatorId = gatewayUserUtil.getCurrentUserId();
         if (operatorId == null) {
@@ -166,7 +166,7 @@ public class ProjectController {
      */
     @PostMapping("/{projectId}/members")
     public ResultVO<Void> addMember(
-            @PathVariable("projectId") Long projectId,
+            @PathVariable("projectId") String projectId,
             @Valid @RequestBody AddMemberDTO addMemberDTO
     ) {
         Long operatorId = gatewayUserUtil.getCurrentUserId();
@@ -192,7 +192,7 @@ public class ProjectController {
      */
     @PutMapping("/{projectId}/members/{userId}")
     public ResultVO<Void> updateMemberRole(
-            @PathVariable("projectId") Long projectId,
+            @PathVariable("projectId") String projectId,
             @PathVariable("userId") Long userId,
             @Valid @RequestBody AddMemberDTO addMemberDTO
     ) {
@@ -218,7 +218,7 @@ public class ProjectController {
      */
     @DeleteMapping("/{projectId}/members/{userId}")
     public ResultVO<Void> removeMember(
-            @PathVariable("projectId") Long projectId,
+            @PathVariable("projectId") String projectId,
             @PathVariable("userId") Long userId
     ) {
         Long operatorId = gatewayUserUtil.getCurrentUserId();

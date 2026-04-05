@@ -26,7 +26,7 @@ export interface ProjectMember {
 }
 
 export interface ProjectInfo {
-  id: number
+  id: string
   name: string
   description?: string
   language: string
@@ -65,7 +65,7 @@ export const projectAPI = {
    * 获取项目详情
    * 对应后端接口: GET /api/v1/projects/{projectId}
    */
-  getProjectById: (projectId: number) => {
+  getProjectById: (projectId: string) => {
     return http.get<ApiResponse<ProjectInfo>>(`/projects/${projectId}`)
   },
 
@@ -73,7 +73,7 @@ export const projectAPI = {
    * 更新项目信息
    * 对应后端接口: PUT /api/v1/projects/{projectId}
    */
-  updateProject: (projectId: number, projectData: ProjectUpdateForm) => {
+  updateProject: (projectId: string, projectData: ProjectUpdateForm) => {
     return http.put<ApiResponse<ProjectInfo>>(`/projects/${projectId}`, projectData)
   },
 
@@ -81,7 +81,7 @@ export const projectAPI = {
    * 删除项目
    * 对应后端接口: DELETE /api/v1/projects/{projectId}
    */
-  deleteProject: (projectId: number) => {
+  deleteProject: (projectId: string) => {
     return http.delete<ApiResponse<null>>(`/projects/${projectId}`)
   },
 
@@ -89,7 +89,7 @@ export const projectAPI = {
    * 获取项目成员列表
    * 对应后端接口: GET /api/v1/projects/{projectId}/members
    */
-  getProjectMembers: (projectId: number) => {
+  getProjectMembers: (projectId: string) => {
     return http.get<ApiResponse<ProjectMember[]>>(`/projects/${projectId}/members`)
   },
 
@@ -97,7 +97,7 @@ export const projectAPI = {
    * 添加项目成员
    * 对应后端接口: POST /api/v1/projects/{projectId}/members
    */
-  addProjectMember: (projectId: number, memberData: AddMemberForm) => {
+  addProjectMember: (projectId: string, memberData: AddMemberForm) => {
     return http.post<ApiResponse<null>>(`/projects/${projectId}/members`, memberData)
   },
 
@@ -105,7 +105,7 @@ export const projectAPI = {
    * 更新成员角色
    * 对应后端接口: PUT /api/v1/projects/{projectId}/members/{userId}
    */
-  updateMemberRole: (projectId: number, userId: number, role: string) => {
+  updateMemberRole: (projectId: string, userId: number, role: string) => {
     return http.put<ApiResponse<null>>(`/projects/${projectId}/members/${userId}`, { 
       userId: userId,
       role: role 
@@ -116,7 +116,7 @@ export const projectAPI = {
    * 移除项目成员
    * 对应后端接口: DELETE /api/v1/projects/{projectId}/members/{userId}
    */
-  removeMember: (projectId: number, userId: number) => {
+  removeMember: (projectId: string, userId: number) => {
     return http.delete<ApiResponse<null>>(`/projects/${projectId}/members/${userId}`)
   }
 }

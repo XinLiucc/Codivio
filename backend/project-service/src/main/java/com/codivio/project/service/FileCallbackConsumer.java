@@ -4,8 +4,10 @@ import com.codivio.project.config.RabbitConfig;
 import com.codivio.project.dto.FileCallbackMessage;
 import com.codivio.project.entity.ProjectFileTree;
 import com.codivio.project.repository.ProjectFileTreeRepository;
+import com.rabbitmq.client.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,13 +36,15 @@ public class FileCallbackConsumer {
      */
     @RabbitListener(queues = RabbitConfig.FILE_CALLBACK_QUEUE)
     @Transactional
-    public void handleFileOperationCallback(FileCallbackMessage callbackMessage) {
+    public void handleFileOperationCallback(FileCallbackMessage callbackMessage,
+                                            Message message, Channel channel) {
         logger.info("收到文件操作回调消息: {}", callbackMessage);
-        
+
         try {
             // 验证消息完整性
             if (!isValidCallbackMessage(callbackMessage)) {
-                logger.warn("回调消息不完整，跳过处理: {}", callbackMessage);
+                logger.warn("回调消息不完整，丢弃: {}", callbackMessage);
+                channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
                 return;
             }
 
@@ -49,14 +53,14 @@ public class FileCallbackConsumer {
                 .findById(callbackMessage.getFileTreeNodeId());
             
             if (nodeOpt.isEmpty()) {
-                logger.warn("找不到对应的文件树节点: nodeId={}", 
+                logger.warn("找不到对应的文件树节点，丢弃消息: nodeId={}",
                           callbackMessage.getFileTreeNodeId());
+                channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
                 return;
             }
 
             ProjectFileTree node = nodeOpt.get();
-            
-            // 根据回调状态处理
+
             switch (callbackMessage.getStatus()) {
                 case SUCCESS:
                     handleSuccessCallback(node, callbackMessage);
@@ -71,14 +75,22 @@ public class FileCallbackConsumer {
                     logger.warn("未知的回调状态: {}", callbackMessage.getStatus());
             }
 
-            logger.info("文件操作回调处理完成: messageId={}, nodeId={}, status={}", 
+            // 无论成功失败都 ack，避免消息永久重投
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+
+            logger.info("文件操作回调处理完成: messageId={}, nodeId={}, status={}",
                        callbackMessage.getOriginalMessageId(),
                        callbackMessage.getFileTreeNodeId(),
                        callbackMessage.getStatus());
 
         } catch (Exception e) {
             logger.error("处理文件操作回调消息失败: {}", callbackMessage, e);
-            // 这里可以考虑重试机制或死信队列处理
+            try {
+                // 异常时也 ack，防止无限重投
+                channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+            } catch (Exception ackEx) {
+                logger.error("Ack失败", ackEx);
+            }
         }
     }
 

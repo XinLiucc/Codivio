@@ -76,7 +76,7 @@ public class FileController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResultVO<FileResponseDTO> uploadMultipartFile(
             @RequestParam("file") MultipartFile file,
-            @RequestParam("projectId") Long projectId,
+            @RequestParam("projectId") String projectId,
             @RequestParam("filePath") String filePath) {
         
         try {
@@ -134,7 +134,7 @@ public class FileController {
      * @return 项目中的文件列表
      */
     @GetMapping("/project/{projectId}")
-    public ResultVO<List<FileResponseDTO>> getFilesByProjectId(@PathVariable Long projectId) {
+    public ResultVO<List<FileResponseDTO>> getFilesByProjectId(@PathVariable String projectId) {
         
         try {
             logger.info("获取项目文件列表请求，项目ID：{}", projectId);
@@ -259,7 +259,7 @@ public class FileController {
      * @return 文件统计信息
      */
     @GetMapping("/project/{projectId}/stats")
-    public ResultVO<FileStatsDTO> getProjectFileStats(@PathVariable Long projectId) {
+    public ResultVO<FileStatsDTO> getProjectFileStats(@PathVariable String projectId) {
         
         try {
             logger.info("获取项目文件统计请求，项目ID：{}", projectId);
@@ -286,17 +286,17 @@ public class FileController {
      * 文件统计DTO
      */
     public static class FileStatsDTO {
-        private Long projectId;
+        private String projectId;
         private Long fileCount;
         private Long totalSize;
         private String totalSizeFormatted;
 
         // Getter and Setter methods
-        public Long getProjectId() {
+        public String getProjectId() {
             return projectId;
         }
 
-        public void setProjectId(Long projectId) {
+        public void setProjectId(String projectId) {
             this.projectId = projectId;
         }
 

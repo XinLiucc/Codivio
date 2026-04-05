@@ -45,7 +45,7 @@ public class FileResponseDTO {
     /**
      * 所属项目ID
      */
-    private Long projectId;
+    private String projectId;
 
 
     /**
@@ -138,11 +138,11 @@ public class FileResponseDTO {
         this.fileTypeDescription = fileTypeDescription;
     }
 
-    public Long getProjectId() {
+    public String getProjectId() {
         return projectId;
     }
 
-    public void setProjectId(Long projectId) {
+    public void setProjectId(String projectId) {
         this.projectId = projectId;
     }
 

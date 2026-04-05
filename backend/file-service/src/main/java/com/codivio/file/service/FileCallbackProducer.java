@@ -60,7 +60,7 @@ public class FileCallbackProducer {
      */
     public void sendSuccessCallback(String originalMessageId,
                                    FileOperationMessage.OperationType operationType,
-                                   Long projectId,
+                                   String projectId,
                                    Long fileTreeNodeId,
                                    String filePath,
                                    String fileId) {
@@ -81,7 +81,7 @@ public class FileCallbackProducer {
      */
     public void sendFailedCallback(String originalMessageId,
                                   FileOperationMessage.OperationType operationType,
-                                  Long projectId,
+                                  String projectId,
                                   Long fileTreeNodeId,
                                   String filePath,
                                   String errorMessage) {

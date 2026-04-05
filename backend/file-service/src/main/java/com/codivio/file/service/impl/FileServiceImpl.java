@@ -84,7 +84,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public FileResponseDTO uploadMultipartFile(MultipartFile file, Long projectId, String filePath, Long currentUserId) {
+    public FileResponseDTO uploadMultipartFile(MultipartFile file, String projectId, String filePath, Long currentUserId) {
         logger.info("开始上传MultipartFile文件，项目ID：{}，文件名：{}，用户ID：{}", 
                     projectId, file.getOriginalFilename(), currentUserId);
 
@@ -124,7 +124,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public List<FileResponseDTO> getFilesByProjectId(Long projectId, Long currentUserId) {
+    public List<FileResponseDTO> getFilesByProjectId(String projectId, Long currentUserId) {
         logger.info("获取项目文件列表，项目ID：{}，用户ID：{}", projectId, currentUserId);
 
         // 1. 验证用户权限
@@ -226,12 +226,12 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public Long countProjectFiles(Long projectId) {
+    public Long countProjectFiles(String projectId) {
         return fileRepository.countByProjectId(projectId);
     }
 
     @Override
-    public Long getProjectTotalFileSize(Long projectId) {
+    public Long getProjectTotalFileSize(String projectId) {
         Long totalSize = fileRepository.sumFileSizeByProjectId(projectId);
         return totalSize != null ? totalSize : 0L;
     }
@@ -323,7 +323,7 @@ public class FileServiceImpl implements FileService {
     /**
      * 验证用户是否有项目读权限
      */
-    private boolean hasProjectReadPermission(Long projectId, Long userId) {
+    private boolean hasProjectReadPermission(String projectId, Long userId) {
         try {
             // 简化版本：暂时返回true，后续实现OpenFeign调用
             // ProjectServiceClient.ProjectMemberRoleResponse response = 
@@ -339,7 +339,7 @@ public class FileServiceImpl implements FileService {
     /**
      * 验证用户是否有项目写权限
      */
-    private boolean hasProjectWritePermission(Long projectId, Long userId) {
+    private boolean hasProjectWritePermission(String projectId, Long userId) {
         try {
             // 简化版本：暂时返回true，后续实现OpenFeign调用
             return true; // MVP阶段暂时跳过权限验证
@@ -352,7 +352,7 @@ public class FileServiceImpl implements FileService {
     /**
      * 验证用户是否有文件删除权限
      */
-    private boolean hasProjectDeletePermission(Long projectId, Long userId) {
+    private boolean hasProjectDeletePermission(String projectId, Long userId) {
         try {
             // 简化版本：暂时返回true，后续实现角色权限检查
             return true; // MVP阶段暂时跳过权限验证

@@ -23,8 +23,8 @@ public class ProjectFileTree {
     /**
      * 项目ID - 非空，关联projects表
      */
-    @Column(name = "project_id", nullable = false)
-    private Long projectId;
+    @Column(name = "project_id", nullable = false, length = 32)
+    private String projectId;
 
     /**
      * 文件路径 - 非空，完整的文件路径
@@ -91,7 +91,7 @@ public class ProjectFileTree {
     /**
      * 便捷构造函数 - 创建文件节点
      */
-    public ProjectFileTree(Long projectId, String filePath, String fileName, 
+    public ProjectFileTree(String projectId, String filePath, String fileName,
                           String parentPath, FileTreeType type) {
         this.projectId = projectId;
         this.filePath = filePath;
@@ -134,11 +134,11 @@ public class ProjectFileTree {
         this.id = id;
     }
 
-    public Long getProjectId() {
+    public String getProjectId() {
         return projectId;
     }
 
-    public void setProjectId(Long projectId) {
+    public void setProjectId(String projectId) {
         this.projectId = projectId;
     }
 

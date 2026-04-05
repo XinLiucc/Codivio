@@ -47,7 +47,7 @@ public interface ProjectFileTreeService {
      * @throws IllegalArgumentException 当参数为空或无效时
      * @throws com.codivio.project.exception.BusinessException 当项目不存在或用户无权限时
      */
-    Map<String, Object> getProjectFileTree(Long projectId, Long userId);
+    Map<String, Object> getProjectFileTree(String projectId, Long userId);
 
     /**
      * 获取指定路径下的直接子节点
@@ -68,7 +68,7 @@ public interface ProjectFileTreeService {
      * @throws IllegalArgumentException 当参数无效时
      * @throws com.codivio.project.exception.BusinessException 当权限不足或路径不存在时
      */
-    List<ProjectFileTree> getChildrenByParentPath(Long projectId, String parentPath, Long userId);
+    List<ProjectFileTree> getChildrenByParentPath(String projectId, String parentPath, Long userId);
 
     /**
      * 根据文件服务ID查找对应的文件树节点
@@ -115,7 +115,7 @@ public interface ProjectFileTreeService {
      * @throws IllegalArgumentException 当参数无效时
      * @throws com.codivio.project.exception.BusinessException 当权限不足、路径冲突或创建失败时
      */
-    ProjectFileTree createFileTreeNode(Long projectId, String filePath, String fileName, 
+    ProjectFileTree createFileTreeNode(String projectId, String filePath, String fileName,
                                      String parentPath, FileTreeType type, Long userId);
 
     /**
@@ -144,7 +144,7 @@ public interface ProjectFileTreeService {
      * @throws IllegalArgumentException 当参数无效时
      * @throws com.codivio.project.exception.BusinessException 当权限不足、节点不存在或名称冲突时
      */
-    ProjectFileTree renameFileTreeNode(Long projectId, String oldFilePath, String newFileName, Long userId);
+    ProjectFileTree renameFileTreeNode(String projectId, String oldFilePath, String newFileName, Long userId);
 
     /**
      * 删除文件或目录节点
@@ -171,7 +171,7 @@ public interface ProjectFileTreeService {
      * @throws IllegalArgumentException 当参数无效时
      * @throws com.codivio.project.exception.BusinessException 当权限不足、节点不存在或删除失败时
      */
-    void deleteFileTreeNode(Long projectId, String filePath, Long userId);
+    void deleteFileTreeNode(String projectId, String filePath, Long userId);
 
     /**
      * 移动文件或目录节点到新位置
@@ -199,7 +199,7 @@ public interface ProjectFileTreeService {
      * @throws IllegalArgumentException 当参数无效时
      * @throws com.codivio.project.exception.BusinessException 当权限不足、路径无效或移动失败时
      */
-    ProjectFileTree moveFileTreeNode(Long projectId, String sourcePath, String targetParentPath, Long userId);
+    ProjectFileTree moveFileTreeNode(String projectId, String sourcePath, String targetParentPath, Long userId);
 
     // ================================ 权限验证方法 ================================
 
@@ -215,7 +215,7 @@ public interface ProjectFileTreeService {
      * @return true-有访问权限，false-无访问权限
      * @throws IllegalArgumentException 当参数为空时
      */
-    boolean hasAccessPermission(Long projectId, Long userId);
+    boolean hasAccessPermission(String projectId, Long userId);
 
     /**
      * 验证用户对项目文件树的编辑权限
@@ -230,7 +230,7 @@ public interface ProjectFileTreeService {
      * @return true-有编辑权限，false-无编辑权限
      * @throws IllegalArgumentException 当参数为空时
      */
-    boolean hasEditPermission(Long projectId, Long userId);
+    boolean hasEditPermission(String projectId, Long userId);
 
     // ================================ 工具方法 ================================
 
@@ -281,7 +281,7 @@ public interface ProjectFileTreeService {
      * @param userId 编辑者用户ID，不能为空
      * @throws IllegalArgumentException 当参数为空或文件节点不存在时
      */
-    void updateFileEditInfo(Long projectId, String filePath, Long userId);
+    void updateFileEditInfo(String projectId, String filePath, Long userId);
 
     /**
      * 同步更新项目文件统计信息
@@ -299,7 +299,7 @@ public interface ProjectFileTreeService {
      * @param projectId 项目ID，不能为空
      * @throws IllegalArgumentException 当项目ID为空或项目不存在时
      */
-    void syncProjectFileStatistics(Long projectId);
+    void syncProjectFileStatistics(String projectId);
 
     /**
      * 初始化新项目的文件树结构
@@ -323,7 +323,7 @@ public interface ProjectFileTreeService {
      * @throws IllegalArgumentException 当参数为空或无效时
      * @throws com.codivio.project.exception.BusinessException 当初始化失败时
      */
-    void initializeProjectFileTree(Long projectId, String language, Long userId);
+    void initializeProjectFileTree(String projectId, String language, Long userId);
 
     // ================================ 消息队列集成方法 ================================
 

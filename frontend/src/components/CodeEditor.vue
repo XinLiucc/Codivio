@@ -188,19 +188,9 @@ const initializeEditor = () => {
 }
 
 // 保存文件
-const handleSave = async () => {
-  if (!editor || saving.value) return
-  
-  saving.value = true
-  try {
-    const value = editor.getValue()
-    emit('save', value)
-    ElMessage.success('保存成功')
-  } catch (error) {
-    ElMessage.error('保存失败')
-  } finally {
-    saving.value = false
-  }
+const handleSave = () => {
+  if (!editor) return
+  emit('save', editor.getValue())
 }
 
 // 格式化代码

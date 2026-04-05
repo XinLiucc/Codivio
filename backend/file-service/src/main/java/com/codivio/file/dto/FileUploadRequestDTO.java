@@ -12,7 +12,7 @@ public class FileUploadRequestDTO {
      * 项目ID
      */
     @NotNull(message = "项目ID不能为空")
-    private Long projectId;
+    private String projectId;
 
     /**
      * 文件在项目中的逻辑路径
@@ -34,17 +34,17 @@ public class FileUploadRequestDTO {
     public FileUploadRequestDTO() {
     }
 
-    public FileUploadRequestDTO(Long projectId, String filePath, String content) {
+    public FileUploadRequestDTO(String projectId, String filePath, String content) {
         this.projectId = projectId;
         this.filePath = filePath;
         this.content = content;
     }
 
-    public Long getProjectId() {
+    public String getProjectId() {
         return projectId;
     }
 
-    public void setProjectId(Long projectId) {
+    public void setProjectId(String projectId) {
         this.projectId = projectId;
     }
 

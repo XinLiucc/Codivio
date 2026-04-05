@@ -9,9 +9,9 @@ import java.time.LocalDateTime;
 public class ProjectResponseDTO {
     
     /**
-     * 项目ID
+     * 项目ID（字符串形式，防止JS整数精度丢失）
      */
-    private Long id;
+    private String id;
     
     /**
      * 项目名称
@@ -52,7 +52,7 @@ public class ProjectResponseDTO {
     // 构造方法
     public ProjectResponseDTO() {}
     
-    public ProjectResponseDTO(Long id, String name, String description, String language, 
+    public ProjectResponseDTO(String id, String name, String description, String language,
                              Integer status, Long ownerId, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.name = name;
@@ -65,11 +65,11 @@ public class ProjectResponseDTO {
     }
     
     // Getter 和 Setter 方法
-    public Long getId() {
+    public String getId() {
         return id;
     }
-    
-    public void setId(Long id) {
+
+    public void setId(String id) {
         this.id = id;
     }
     

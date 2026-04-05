@@ -57,8 +57,8 @@ public class File {
     /**
      * 所属项目ID
      */
-    @Column(name = "project_id", nullable = false)
-    private Long projectId;
+    @Column(name = "project_id", nullable = false, length = 32)
+    private String projectId;
 
     /**
      * 文件内容（仅文本文件）
@@ -165,11 +165,11 @@ public class File {
         this.fileExtension = fileExtension;
     }
 
-    public Long getProjectId() {
+    public String getProjectId() {
         return projectId;
     }
 
-    public void setProjectId(Long projectId) {
+    public void setProjectId(String projectId) {
         this.projectId = projectId;
     }
 

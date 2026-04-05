@@ -2,7 +2,7 @@ import http, { ApiResponse } from '@/utils/http'
 
 // 文件相关的数据类型
 export interface FileUploadForm {
-  projectId: number
+  projectId: string
   filePath: string
   content: string
   mimeType?: string
@@ -10,7 +10,7 @@ export interface FileUploadForm {
 
 export interface FileInfo {
   id: string
-  projectId: number
+  projectId: string
   filePath: string
   originalName: string
   mimeType: string
@@ -23,7 +23,7 @@ export interface FileInfo {
 }
 
 export interface FileStats {
-  projectId: number
+  projectId: string
   fileCount: number
   totalSize: number
   totalSizeFormatted: string
@@ -45,10 +45,10 @@ export const fileAPI = {
    * 上传文件（MultipartFile方式）
    * 对应后端接口: POST /api/v1/files/upload-multipart
    */
-  uploadMultipartFile: (file: File, projectId: number, filePath: string) => {
+  uploadMultipartFile: (file: File, projectId: string, filePath: string) => {
     const formData = new FormData()
     formData.append('file', file)
-    formData.append('projectId', projectId.toString())
+    formData.append('projectId', projectId)
     formData.append('filePath', filePath)
     
     return http.post<ApiResponse<FileInfo>>('/files/upload-multipart', formData, {
@@ -70,7 +70,7 @@ export const fileAPI = {
    * 根据项目ID获取文件列表
    * 对应后端接口: GET /api/v1/files/project/{projectId}
    */
-  getFilesByProject: (projectId: number) => {
+  getFilesByProject: (projectId: string) => {
     return http.get<ApiResponse<FileInfo[]>>(`/files/project/${projectId}`)
   },
 
@@ -108,7 +108,7 @@ export const fileAPI = {
    * 获取项目文件统计
    * 对应后端接口: GET /api/v1/files/project/{projectId}/stats
    */
-  getProjectFileStats: (projectId: number) => {
+  getProjectFileStats: (projectId: string) => {
     return http.get<ApiResponse<FileStats>>(`/files/project/${projectId}/stats`)
   }
 }
