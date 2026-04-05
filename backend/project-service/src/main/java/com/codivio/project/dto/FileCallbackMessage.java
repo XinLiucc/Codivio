@@ -51,12 +51,12 @@ public class FileCallbackMessage {
     /**
      * 项目ID
      */
-    private Long projectId;
+    private String projectId;
 
     /**
      * 文件树节点ID
      */
-    private Long fileTreeNodeId;
+    private String fileTreeNodeId;
 
     /**
      * 文件路径
@@ -104,9 +104,9 @@ public class FileCallbackMessage {
         this.callbackTime = LocalDateTime.now();
     }
 
-    public FileCallbackMessage(String originalMessageId, CallbackStatus status, 
-                              FileOperationMessage.OperationType operationType, 
-                              Long projectId, Long fileTreeNodeId) {
+    public FileCallbackMessage(String originalMessageId, CallbackStatus status,
+                              FileOperationMessage.OperationType operationType,
+                              String projectId, String fileTreeNodeId) {
         this();
         this.originalMessageId = originalMessageId;
         this.status = status;
@@ -149,19 +149,19 @@ public class FileCallbackMessage {
         this.operationType = operationType;
     }
 
-    public Long getProjectId() {
+    public String getProjectId() {
         return projectId;
     }
 
-    public void setProjectId(Long projectId) {
+    public void setProjectId(String projectId) {
         this.projectId = projectId;
     }
 
-    public Long getFileTreeNodeId() {
+    public String getFileTreeNodeId() {
         return fileTreeNodeId;
     }
 
-    public void setFileTreeNodeId(Long fileTreeNodeId) {
+    public void setFileTreeNodeId(String fileTreeNodeId) {
         this.fileTreeNodeId = fileTreeNodeId;
     }
 
