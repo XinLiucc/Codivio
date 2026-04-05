@@ -60,6 +60,11 @@ spring:
       max-file-size: 10MB
       max-request-size: 50MB
 
+# 文件存储路径（本地开发环境）
+file:
+  storage:
+    path: /home/xinliucc/Projects/Graduation/project/Codivio/data/files
+
 # 日志配置
 logging:
   level:
