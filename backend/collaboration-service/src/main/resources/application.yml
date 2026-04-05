@@ -4,13 +4,19 @@ server:
 spring:
   application:
     name: collaboration-service
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 5000ms
 
-# 日志配置
+jwt:
+  secret: codivio-jwt-secret-key-2025-very-long-and-secure-string
+
 logging:
   level:
-    com.codivio.collaboration: INFO
+    com.codivio.collaboration: DEBUG
 
-# Actuator 监控
 management:
   endpoints:
     web:
