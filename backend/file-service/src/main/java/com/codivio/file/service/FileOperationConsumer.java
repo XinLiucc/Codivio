@@ -149,8 +149,8 @@ public class FileOperationConsumer {
             // 保存到数据库
             File savedEntity = fileRepository.save(fileEntity);
 
-            // 创建物理文件
-            String physicalPath = createPhysicalFile(savedEntity.getId(), message.getFilePath());
+            // 创建物理文件（按项目隔离）
+            String physicalPath = createPhysicalFile(savedEntity.getId(), message.getProjectId());
 
             logger.info("文件创建成功: fileId={}, physicalPath={}", 
                        savedEntity.getId(), physicalPath);
@@ -188,8 +188,8 @@ public class FileOperationConsumer {
             logger.info("开始创建目录: projectId={}, filePath={}", 
                        message.getProjectId(), message.getFilePath());
 
-            // 创建物理目录
-            String physicalPath = createPhysicalDirectory(message.getFilePath());
+            // 确保项目目录存在
+            String physicalPath = createPhysicalDirectory(message.getProjectId());
 
             logger.info("目录创建成功: physicalPath={}", physicalPath);
 
@@ -231,7 +231,7 @@ public class FileOperationConsumer {
                 
                 if (fileEntity != null) {
                     // 删除物理文件
-                    deletePhysicalFile(message.getFileId());
+                    deletePhysicalFile(message.getFileId(), message.getProjectId());
                     
                     // 删除数据库记录
                     fileRepository.deleteById(fileId);
@@ -271,8 +271,8 @@ public class FileOperationConsumer {
             logger.info("开始删除目录: projectId={}, filePath={}", 
                        message.getProjectId(), message.getFilePath());
 
-            // 删除物理目录
-            deletePhysicalDirectory(message.getFilePath());
+            // 不主动删除项目目录（项目下可能还有其他文件）
+            deletePhysicalDirectory(message.getProjectId());
 
             logger.info("目录删除成功: filePath={}", message.getFilePath());
 
@@ -301,49 +301,41 @@ public class FileOperationConsumer {
 
     /**
      * 创建物理文件
+     * 按项目隔离：projects/{projectId}/{fileId}
      */
-    private String createPhysicalFile(String fileId, String filePath) throws IOException {
-        Path fullPath = Paths.get(fileStoragePath, "project_files", fileId + ".txt");
-        
-        // 确保父目录存在
+    private String createPhysicalFile(String fileId, String projectId) throws IOException {
+        Path fullPath = Paths.get(fileStoragePath, "projects", projectId, fileId);
         Files.createDirectories(fullPath.getParent());
-        
-        // 创建空文件
         Files.createFile(fullPath);
-        
         return fullPath.toString();
     }
 
     /**
-     * 创建物理目录
+     * 创建物理目录（在项目目录下）
      */
-    private String createPhysicalDirectory(String dirPath) throws IOException {
-        Path fullPath = Paths.get(fileStoragePath, "project_dirs", dirPath.replace("/", "_"));
-        
-        // 创建目录
+    private String createPhysicalDirectory(String projectId) throws IOException {
+        Path fullPath = Paths.get(fileStoragePath, "projects", projectId);
         Files.createDirectories(fullPath);
-        
         return fullPath.toString();
     }
 
     /**
      * 删除物理文件
      */
-    private void deletePhysicalFile(String fileId) throws IOException {
-        Path fullPath = Paths.get(fileStoragePath, "project_files", fileId + ".txt");
-        
+    private void deletePhysicalFile(String fileId, String projectId) throws IOException {
+        Path fullPath = Paths.get(fileStoragePath, "projects", projectId, fileId);
         if (Files.exists(fullPath)) {
             Files.delete(fullPath);
         }
     }
 
     /**
-     * 删除物理目录
+     * 删除物理目录（仅当项目目录为空时删除）
      */
-    private void deletePhysicalDirectory(String dirPath) throws IOException {
-        Path fullPath = Paths.get(fileStoragePath, "project_dirs", dirPath.replace("/", "_"));
-        
-        if (Files.exists(fullPath)) {
+    private void deletePhysicalDirectory(String projectId) throws IOException {
+        Path fullPath = Paths.get(fileStoragePath, "projects", projectId);
+        if (Files.exists(fullPath) && fullPath.toFile().list() != null
+                && fullPath.toFile().list().length == 0) {
             Files.delete(fullPath);
         }
     }
