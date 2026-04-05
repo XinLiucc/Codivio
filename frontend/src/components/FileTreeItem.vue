@@ -3,13 +3,13 @@
     <!-- 节点行 -->
     <div
       class="tree-row"
-      :class="{ active: node.type === 'FILE' && node.id === activeId, directory: node.type === 'DIRECTORY' }"
+      :class="{ active: node.type === 'file' && node.id === activeId, directory: node.type === 'directory' }"
       :style="{ paddingLeft: depth * 16 + 8 + 'px' }"
       @click="handleClick"
       @contextmenu.prevent="showMenu"
     >
       <!-- 展开箭头 -->
-      <el-icon class="arrow" :class="{ expanded: isOpen, invisible: node.type === 'FILE' }">
+      <el-icon class="arrow" :class="{ expanded: isOpen, invisible: node.type === 'file' }">
         <ArrowRight />
       </el-icon>
 
@@ -22,7 +22,7 @@
     </div>
 
     <!-- 子节点（目录展开时显示） -->
-    <div v-if="node.type === 'DIRECTORY' && isOpen">
+    <div v-if="node.type === 'directory' && isOpen">
       <div v-if="node.children && node.children.length === 0" class="empty-dir" :style="{ paddingLeft: (depth + 1) * 16 + 8 + 'px' }">
         <el-text size="small" type="info">空目录</el-text>
       </div>
@@ -48,7 +48,7 @@
         :style="{ left: menuX + 'px', top: menuY + 'px' }"
         @click.stop
       >
-        <template v-if="node.type === 'DIRECTORY'">
+        <template v-if="node.type === 'directory'">
           <div class="menu-item" @click="onNewFile">
             <el-icon><DocumentAdd /></el-icon> 新建文件
           </div>
@@ -91,12 +91,12 @@ const depth = computed(() => props.depth ?? 0)
 const isOpen = ref(false)
 
 const nodeIcon = computed(() => {
-  if (props.node.type === 'DIRECTORY') return isOpen.value ? FolderOpened : Folder
+  if (props.node.type === 'directory') return isOpen.value ? FolderOpened : Folder
   return Document
 })
 
 const handleClick = () => {
-  if (props.node.type === 'DIRECTORY') {
+  if (props.node.type === 'directory') {
     isOpen.value = !isOpen.value
   } else {
     emit('open', props.node)

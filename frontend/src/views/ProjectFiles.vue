@@ -200,7 +200,7 @@ const loadFileTree = async () => {
   treeLoading.value = true
   try {
     const res = await fileTreeAPI.getFileTree(projectId)
-    fileTree.value = res.data.data
+    fileTree.value = res.data.data?.tree ?? []
   } catch {
     ElMessage.error('加载文件树失败')
   } finally {
@@ -210,7 +210,7 @@ const loadFileTree = async () => {
 
 // 打开文件
 const handleOpenFile = async (node: FileTreeNode) => {
-  if (node.type === 'DIRECTORY') return
+  if (node.type === 'directory') return
   if (activeFile.value?.id === node.id) return
 
   activeFile.value = node
@@ -267,15 +267,10 @@ const handleCreateFile = async () => {
   try { await newFormRef.value.validate() } catch { return }
   creating.value = true
   try {
-    const parentPath = newForm.parentPath || '/'
-    const path = parentPath.endsWith('/')
-      ? `${parentPath}${newForm.name}`
-      : `${parentPath}/${newForm.name}`
     await fileTreeAPI.createNode(projectId, {
       name: newForm.name,
-      path,
-      type: 'FILE',
-      parentPath
+      parentPath: newForm.parentPath,
+      type: 'FILE'
     })
     ElMessage.success('文件创建成功')
     showNewFileDialog.value = false
@@ -293,15 +288,10 @@ const handleCreateDir = async () => {
   try { await newDirFormRef.value.validate() } catch { return }
   creating.value = true
   try {
-    const parentPath = newForm.parentPath || '/'
-    const path = parentPath.endsWith('/')
-      ? `${parentPath}${newForm.name}`
-      : `${parentPath}/${newForm.name}`
     await fileTreeAPI.createNode(projectId, {
       name: newForm.name,
-      path,
-      type: 'DIRECTORY',
-      parentPath
+      parentPath: newForm.parentPath,
+      type: 'DIRECTORY'
     })
     ElMessage.success('目录创建成功')
     showNewDirDialog.value = false
@@ -323,7 +313,7 @@ const handleRenameNode = (node: FileTreeNode) => {
 const confirmRename = async () => {
   if (!renameTarget.value || !renameValue.value.trim()) return
   try {
-    await fileTreeAPI.renameNode(projectId, renameTarget.value.id, renameValue.value.trim())
+    await fileTreeAPI.renameNode(projectId, renameTarget.value.path, renameValue.value.trim())
     ElMessage.success('重命名成功')
     showRenameDialog.value = false
     if (activeFile.value?.id === renameTarget.value.id) {
@@ -343,7 +333,7 @@ const handleDeleteNode = async (node: FileTreeNode) => {
       '确认删除',
       { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' }
     )
-    await fileTreeAPI.deleteNode(projectId, node.id)
+    await fileTreeAPI.deleteNode(projectId, node.path)
     ElMessage.success('删除成功')
     if (activeFile.value?.id === node.id) closeFile()
     loadFileTree()

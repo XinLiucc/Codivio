@@ -5,28 +5,31 @@ export interface FileTreeNode {
   projectId: string
   name: string
   path: string
-  type: 'FILE' | 'DIRECTORY'
+  type: 'file' | 'directory'
   parentPath: string | null
   fileId: string | null
-  createdAt: string
-  updatedAt: string
   children?: FileTreeNode[]
+  hasChildren?: boolean
+  lastModified?: string
+  createdAt?: string
 }
 
-export interface CreateNodeForm {
-  name: string
-  path: string
-  type: 'FILE' | 'DIRECTORY'
-  parentPath?: string
+export interface FileTreeResponse {
+  tree: FileTreeNode[]
+  totalFiles: number
+  totalDirectories: number
+  totalNodes: number
+  lastModified: string | null
 }
 
 export const fileTreeAPI = {
   /**
    * 获取项目完整文件树
    * GET /api/v1/projects/{projectId}/files
+   * 返回 { tree: [...], totalFiles, ... }
    */
   getFileTree: (projectId: string) => {
-    return http.get<ApiResponse<FileTreeNode[]>>(`/projects/${projectId}/files`)
+    return http.get<ApiResponse<FileTreeResponse>>(`/projects/${projectId}/files`)
   },
 
   /**
@@ -42,40 +45,57 @@ export const fileTreeAPI = {
   /**
    * 创建文件或目录节点
    * POST /api/v1/projects/{projectId}/files/nodes
+   * 后端期望: { filePath, fileName, parentPath, type }
    */
-  createNode: (projectId: string, form: CreateNodeForm) => {
-    return http.post<ApiResponse<FileTreeNode>>(`/projects/${projectId}/files/nodes`, form)
+  createNode: (projectId: string, params: {
+    name: string
+    parentPath: string
+    type: 'FILE' | 'DIRECTORY'
+  }) => {
+    const parentPath = params.parentPath || '/'
+    const filePath = parentPath.endsWith('/')
+      ? `${parentPath}${params.name}`
+      : `${parentPath}/${params.name}`
+    return http.post<ApiResponse<FileTreeNode>>(`/projects/${projectId}/files/nodes`, {
+      filePath,
+      fileName: params.name,
+      parentPath: params.parentPath || null,
+      type: params.type
+    })
   },
 
   /**
    * 重命名节点
    * PUT /api/v1/projects/{projectId}/files/nodes
+   * 后端期望: { filePath, newFileName }
    */
-  renameNode: (projectId: string, nodeId: number, newName: string) => {
+  renameNode: (projectId: string, filePath: string, newFileName: string) => {
     return http.put<ApiResponse<FileTreeNode>>(`/projects/${projectId}/files/nodes`, {
-      nodeId,
-      newName
+      filePath,
+      newFileName
     })
   },
 
   /**
    * 删除节点
-   * DELETE /api/v1/projects/{projectId}/files/nodes
+   * DELETE /api/v1/projects/{projectId}/files/nodes?filePath=xxx
+   * 后端用 @RequestParam 接收 filePath
    */
-  deleteNode: (projectId: string, nodeId: number) => {
+  deleteNode: (projectId: string, filePath: string) => {
     return http.delete<ApiResponse<void>>(`/projects/${projectId}/files/nodes`, {
-      data: { nodeId }
+      params: { filePath }
     })
   },
 
   /**
    * 移动节点
    * PUT /api/v1/projects/{projectId}/files/nodes/move
+   * 后端期望: { sourcePath, targetParentPath }
    */
-  moveNode: (projectId: string, nodeId: number, newParentPath: string) => {
+  moveNode: (projectId: string, sourcePath: string, targetParentPath: string) => {
     return http.put<ApiResponse<FileTreeNode>>(`/projects/${projectId}/files/nodes/move`, {
-      nodeId,
-      newParentPath
+      sourcePath,
+      targetParentPath
     })
   }
 }
