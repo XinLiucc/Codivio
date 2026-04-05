@@ -61,7 +61,7 @@ public class FileCallbackProducer {
     public void sendSuccessCallback(String originalMessageId,
                                    FileOperationMessage.OperationType operationType,
                                    String projectId,
-                                   String fileTreeNodeId,
+                                   Long fileTreeNodeId,
                                    String filePath,
                                    String fileId) {
         FileCallbackMessage callback = FileCallbackMessage.success(
@@ -82,7 +82,7 @@ public class FileCallbackProducer {
     public void sendFailedCallback(String originalMessageId,
                                   FileOperationMessage.OperationType operationType,
                                   String projectId,
-                                  String fileTreeNodeId,
+                                  Long fileTreeNodeId,
                                   String filePath,
                                   String errorMessage) {
         FileCallbackMessage callback = FileCallbackMessage.failed(
