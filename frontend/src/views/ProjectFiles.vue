@@ -296,7 +296,7 @@ const router = useRouter()
 const route = useRoute()
 
 // 项目ID (从路由参数获取)
-const projectId = computed(() => parseInt(route.params.projectId as string))
+const projectId = computed(() => route.params.projectId as string)
 
 // 加载状态
 const loading = ref(false)
