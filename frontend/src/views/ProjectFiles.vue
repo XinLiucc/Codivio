@@ -9,6 +9,10 @@
         <span class="project-name">{{ projectInfo?.name || '加载中...' }}</span>
         <span class="topbar-divider">/</span>
         <span class="topbar-file">{{ activeFile?.name || '未打开文件' }}</span>
+        <div v-if="activeFile" class="collab-status">
+          <span class="status-dot" :class="collabStatus"></span>
+          <span class="status-text">{{ collabStatusText }}</span>
+        </div>
       </div>
       <div class="topbar-right">
         <el-button size="small" @click="showNewFileDialog = true">
@@ -76,11 +80,15 @@
           <div class="editor-content" v-loading="editorLoading">
             <CodeEditor
               v-if="!editorLoading"
+              ref="codeEditorRef"
               v-model="editorContent"
               :filename="activeFile.name"
               :height="'100%'"
               :show-toolbar="false"
+              :project-id="projectId"
+              :file-id="activeFile.fileId ?? ''"
               @save="handleSaveFile"
+              @collab-status="(s, t) => { collabStatus = s; collabStatusText = t }"
             />
           </div>
         </div>
@@ -159,6 +167,9 @@ const activeFile = ref<FileTreeNode | null>(null)
 const editorContent = ref('')
 const editorLoading = ref(false)
 const saving = ref(false)
+const codeEditorRef = ref<InstanceType<typeof CodeEditor> | null>(null)
+const collabStatus = ref('connecting')
+const collabStatusText = ref('连接中...')
 
 // 侧边栏宽度
 const sidebarWidth = ref(240)
@@ -216,6 +227,8 @@ const handleOpenFile = async (node: FileTreeNode) => {
   activeFile.value = node
   editorLoading.value = true
   editorContent.value = ''
+  collabStatus.value = 'connecting'
+  collabStatusText.value = '连接中...'
 
   try {
     if (node.fileId) {
@@ -430,6 +443,31 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.collab-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #9d9d9d;
+  margin-left: 8px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot.connected { background: #52c41a; }
+.status-dot.connecting { background: #faad14; animation: pulse 1.2s infinite; }
+.status-dot.disconnected { background: #ff4d4f; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
 
 /* 主体 */

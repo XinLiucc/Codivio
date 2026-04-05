@@ -21,7 +21,10 @@
     "pinia": "^3.0.3",
     "pinia-plugin-persistedstate": "^4.5.0",
     "vue": "^3.3.11",
-    "vue-router": "^4.5.1"
+    "vue-router": "^4.5.1",
+    "y-monaco": "^0.1.6",
+    "y-websocket": "^3.0.0",
+    "yjs": "^13.6.30"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",

@@ -111,17 +111,29 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public List<ProjectResponseDTO> getProjectsByOwner(Long userId) {
-        // 1. 查找用户拥有的所有项目
-        List<Project> projects = projectRepository.findByOwnerId(userId);
-        
-        // 2. 转换为响应DTO格式
+        // 1. 查找用户拥有的项目
+        List<Project> ownedProjects = projectRepository.findByOwnerId(userId);
+
+        // 2. 查找用户作为成员加入的项目（排除自己创建的，避免重复）
+        List<ProjectMember> memberships = projectMemberRepository.findByUserId(userId);
+        List<String> ownedIds = ownedProjects.stream()
+                .map(Project::getId).toList();
+        List<Project> memberProjects = memberships.stream()
+                .map(ProjectMember::getProjectId)
+                .filter(id -> !ownedIds.contains(id))
+                .distinct()
+                .map(id -> projectRepository.findById(id).orElse(null))
+                .filter(p -> p != null)
+                .toList();
+
+        // 3. 合并并转换
         List<ProjectResponseDTO> responseDTOs = new ArrayList<>();
-        for(Project project : projects) {
-            ProjectResponseDTO responseDTO = convertToResponseDTO(project);
-            responseDTOs.add(responseDTO);
+        for (Project project : ownedProjects) {
+            responseDTOs.add(convertToResponseDTO(project));
         }
-        
-        // 3. 返回项目列表（如果用户没有项目，返回空列表是正常的）
+        for (Project project : memberProjects) {
+            responseDTOs.add(convertToResponseDTO(project));
+        }
         return responseDTOs;
     }
 
