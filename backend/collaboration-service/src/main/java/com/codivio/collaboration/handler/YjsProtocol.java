@@ -59,9 +59,10 @@ public class YjsProtocol {
 
     /**
      * 构造 sync step1 消息（空 state vector，告诉客户端"我什么都没有，给我全量"）
+     * 格式：[0=sync, 0=step1, 1=stateVector长度, 0=空Map]
      */
     public static byte[] buildSyncStep1() {
-        return new byte[]{(byte) MSG_SYNC, (byte) SYNC_STEP1, 0};
+        return new byte[]{(byte) MSG_SYNC, (byte) SYNC_STEP1, 1, 0};
     }
 
     /**

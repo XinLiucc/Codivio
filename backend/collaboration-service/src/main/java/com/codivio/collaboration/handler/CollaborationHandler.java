@@ -62,11 +62,8 @@ public class CollaborationHandler implements WebSocketHandler {
             }
 
         } else if (YjsProtocol.isSyncStep2(data)) {
-            // 客户端回传的初始同步内容：存 Redis，不广播
-            byte[] update = YjsProtocol.extractUpdate(data);
-            if (update != null) {
-                docStateStore.appendUpdate(roomId, update);
-            }
+            // sync step2 是握手协议，不存储、不广播
+            // （客户端实际编辑内容通过 syncUpdate 发送）
 
         } else if (YjsProtocol.isSyncUpdate(data)) {
             // 客户端的增量编辑：存 Redis + 广播给房间其他人
