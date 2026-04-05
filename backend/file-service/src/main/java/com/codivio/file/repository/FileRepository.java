@@ -20,7 +20,7 @@ public interface FileRepository extends JpaRepository<File, String> {
      * @param projectId 项目ID
      * @return 文件列表
      */
-    List<File> findByProjectIdAndStatus(Long projectId, Integer status);
+    List<File> findByProjectIdAndStatus(String projectId, Integer status);
 
     /**
      * 根据项目ID和文件名查询文件
@@ -28,7 +28,7 @@ public interface FileRepository extends JpaRepository<File, String> {
      * @param originalName 原始文件名
      * @return 文件信息
      */
-    Optional<File> findByProjectIdAndOriginalNameAndStatus(Long projectId, String originalName, Integer status);
+    Optional<File> findByProjectIdAndOriginalNameAndStatus(String projectId, String originalName, Integer status);
 
     /**
      * 根据最后编辑者ID查询文件列表
@@ -43,7 +43,7 @@ public interface FileRepository extends JpaRepository<File, String> {
      * @param mimeType MIME类型
      * @return 文件列表
      */
-    List<File> findByProjectIdAndMimeTypeAndStatus(Long projectId, String mimeType, Integer status);
+    List<File> findByProjectIdAndMimeTypeAndStatus(String projectId, String mimeType, Integer status);
 
     /**
      * 统计项目中的文件数量
@@ -51,7 +51,7 @@ public interface FileRepository extends JpaRepository<File, String> {
      * @return 文件数量
      */
     @Query("SELECT COUNT(f) FROM File f WHERE f.projectId = :projectId AND f.status = 1")
-    Long countByProjectId(@Param("projectId") Long projectId);
+    Long countByProjectId(@Param("projectId") String projectId);
 
     /**
      * 统计项目中的文件总大小
@@ -59,5 +59,5 @@ public interface FileRepository extends JpaRepository<File, String> {
      * @return 文件总大小（字节）
      */
     @Query("SELECT SUM(f.fileSize) FROM File f WHERE f.projectId = :projectId AND f.status = 1")
-    Long sumFileSizeByProjectId(@Param("projectId") Long projectId);
+    Long sumFileSizeByProjectId(@Param("projectId") String projectId);
 }

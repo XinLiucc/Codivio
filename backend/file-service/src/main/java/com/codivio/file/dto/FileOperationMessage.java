@@ -49,7 +49,7 @@ public class FileOperationMessage {
     /**
      * 文件树节点ID
      */
-    private Long fileTreeNodeId;
+    private String fileTreeNodeId;
 
     /**
      * 文件路径
@@ -98,7 +98,7 @@ public class FileOperationMessage {
     }
 
     public FileOperationMessage(OperationType operationType, String projectId,
-                               Long fileTreeNodeId, String filePath, String fileName, Long userId) {
+                               String fileTreeNodeId, String filePath, String fileName, Long userId) {
         this();
         this.operationType = operationType;
         this.projectId = projectId;
@@ -134,11 +134,11 @@ public class FileOperationMessage {
         this.projectId = projectId;
     }
 
-    public Long getFileTreeNodeId() {
+    public String getFileTreeNodeId() {
         return fileTreeNodeId;
     }
 
-    public void setFileTreeNodeId(Long fileTreeNodeId) {
+    public void setFileTreeNodeId(String fileTreeNodeId) {
         this.fileTreeNodeId = fileTreeNodeId;
     }
 

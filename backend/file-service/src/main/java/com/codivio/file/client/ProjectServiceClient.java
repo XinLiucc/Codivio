@@ -21,7 +21,7 @@ public interface ProjectServiceClient {
      */
     @GetMapping("/api/v1/projects/{projectId}/members/{userId}/role")
     ProjectMemberRoleResponse getUserRoleInProject(
-            @PathVariable("projectId") Long projectId,
+            @PathVariable("projectId") String projectId,
             @PathVariable("userId") Long userId,
             @RequestHeader("Authorization") String authorization
     );
@@ -35,7 +35,7 @@ public interface ProjectServiceClient {
      */
     @GetMapping("/api/v1/projects/{projectId}/members/{userId}/exists")
     Boolean isProjectMember(
-            @PathVariable("projectId") Long projectId,
+            @PathVariable("projectId") String projectId,
             @PathVariable("userId") Long userId,
             @RequestHeader("Authorization") String authorization
     );

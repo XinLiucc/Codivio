@@ -28,7 +28,7 @@ public interface FileService {
      * @param currentUserId 当前用户ID
      * @return 文件响应信息
      */
-    FileResponseDTO uploadMultipartFile(MultipartFile file, Long projectId, String filePath, Long currentUserId);
+    FileResponseDTO uploadMultipartFile(MultipartFile file, String projectId, String filePath, Long currentUserId);
 
     /**
      * 根据文件ID获取文件信息
@@ -44,7 +44,7 @@ public interface FileService {
      * @param currentUserId 当前用户ID
      * @return 文件列表
      */
-    List<FileResponseDTO> getFilesByProjectId(Long projectId, Long currentUserId);
+    List<FileResponseDTO> getFilesByProjectId(String projectId, Long currentUserId);
 
     /**
      * 更新文件内容
@@ -77,12 +77,12 @@ public interface FileService {
      * @param projectId 项目ID
      * @return 文件数量
      */
-    Long countProjectFiles(Long projectId);
+    Long countProjectFiles(String projectId);
 
     /**
      * 统计项目文件总大小
      * @param projectId 项目ID
      * @return 文件总大小（字节）
      */
-    Long getProjectTotalFileSize(Long projectId);
+    Long getProjectTotalFileSize(String projectId);
 }
