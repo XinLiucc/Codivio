@@ -553,5 +553,14 @@ onMounted(() => {
 .editor-content {
   flex: 1;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-content :deep(.code-editor-container) {
+  flex: 1;
+  height: 100%;
+  border: none;
+  border-radius: 0;
 }
 </style>
