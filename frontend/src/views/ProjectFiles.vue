@@ -237,13 +237,19 @@ const closeFile = () => {
 
 // 保存文件
 const handleSaveFile = async () => {
-  if (!activeFile.value?.fileId) return
+  if (!activeFile.value) return
+  if (!activeFile.value.fileId) {
+    ElMessage.warning('文件尚未准备好（fileId 为空），请关闭后重新打开再保存')
+    return
+  }
   saving.value = true
   try {
     await fileAPI.updateFileContent(activeFile.value.fileId, editorContent.value)
     ElMessage.success('保存成功')
-  } catch {
-    ElMessage.error('保存失败')
+  } catch (e: any) {
+    const msg = e?.response?.data?.message || e?.message || '未知错误'
+    ElMessage.error(`保存失败：${msg}`)
+    console.error('Save error:', e)
   } finally {
     saving.value = false
   }

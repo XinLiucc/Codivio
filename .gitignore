@@ -120,3 +120,6 @@ rabbitmq_data/
 
 # Database data
 data/out/
+
+# Local file storage (physical files uploaded/created by users)
+data/files/
