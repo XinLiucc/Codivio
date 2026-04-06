@@ -11,14 +11,18 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 public class WebSocketConfig implements WebSocketConfigurer {
 
     private final CollaborationHandler collaborationHandler;
+    private final JwtHandshakeInterceptor jwtHandshakeInterceptor;
 
-    public WebSocketConfig(CollaborationHandler collaborationHandler) {
+    public WebSocketConfig(CollaborationHandler collaborationHandler,
+                           JwtHandshakeInterceptor jwtHandshakeInterceptor) {
         this.collaborationHandler = collaborationHandler;
+        this.jwtHandshakeInterceptor = jwtHandshakeInterceptor;
     }
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(collaborationHandler, "/collaboration/ws/{projectId}/{fileId}")
+                .addInterceptors(jwtHandshakeInterceptor)
                 .setAllowedOrigins("*");
     }
 }
