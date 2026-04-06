@@ -12,6 +12,19 @@
         <div v-if="activeFile" class="collab-status">
           <span class="status-dot" :class="collabStatus"></span>
           <span class="status-text">{{ collabStatusText }}</span>
+          <!-- 在线用户头像气泡 -->
+          <div class="online-users" v-if="onlineUsers.length > 0">
+            <el-tooltip
+              v-for="u in onlineUsers"
+              :key="u.name"
+              :content="u.name"
+              placement="bottom"
+            >
+              <div class="user-avatar" :style="{ background: u.color }">
+                {{ u.name.charAt(0).toUpperCase() }}
+              </div>
+            </el-tooltip>
+          </div>
         </div>
       </div>
       <div class="topbar-right">
@@ -139,7 +152,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import {
@@ -170,6 +183,7 @@ const saving = ref(false)
 const codeEditorRef = ref<InstanceType<typeof CodeEditor> | null>(null)
 const collabStatus = ref('connecting')
 const collabStatusText = ref('连接中...')
+const onlineUsers = computed(() => codeEditorRef.value?.onlineUsers ?? [])
 
 // 侧边栏宽度
 const sidebarWidth = ref(240)
@@ -464,6 +478,27 @@ onMounted(() => {
 .status-dot.connected { background: #52c41a; }
 .status-dot.connecting { background: #faad14; animation: pulse 1.2s infinite; }
 .status-dot.disconnected { background: #ff4d4f; }
+
+.online-users {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+}
+
+.user-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  cursor: default;
+  border: 1.5px solid rgba(255,255,255,0.3);
+}
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }

@@ -106,6 +106,9 @@ let yjsBinding: MonacoBinding | null = null
 const wsStatus = ref<'connecting' | 'connected' | 'disconnected'>('connecting')
 const wsStatusText = ref('连接中...')
 
+export interface OnlineUser { name: string; color: string }
+const onlineUsers = ref<OnlineUser[]>([])
+
 // 工具栏状态
 const saving = ref(false)
 const isFullscreen = ref(false)
@@ -234,10 +237,12 @@ const setupYjs = () => {
 
   const updateCursorStyles = () => {
     const rules: string[] = []
+    const users: OnlineUser[] = []
     yjsProvider!.awareness.getStates().forEach((state, clientID) => {
       if (clientID === yjsDoc!.clientID) return
       const color = state.user?.color || '#999'
       const name = state.user?.name || '匿名'
+      if (state.user) users.push({ name, color })
       rules.push(`
         .yRemoteSelection-${clientID} { background-color: ${color}40; }
         .yRemoteSelectionHead-${clientID} {
@@ -261,6 +266,7 @@ const setupYjs = () => {
       `)
     })
     styleEl.textContent = rules.join('\n')
+    onlineUsers.value = users
   }
 
   yjsProvider.awareness.on('change', ({ added }: { added: number[] }) => {
@@ -397,7 +403,8 @@ defineExpose({
   focus: () => editor?.focus(),
   layout: () => editor?.layout(),
   wsStatus,
-  wsStatusText
+  wsStatusText,
+  onlineUsers,
 })
 </script>
 
