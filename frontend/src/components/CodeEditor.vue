@@ -193,12 +193,21 @@ const initializeEditor = () => {
   })
 }
 
+// 为每个用户生成固定颜色（基于用户名哈希，同一用户颜色稳定）
+const getUserColor = (name: string): string => {
+  const colors = ['#e57373','#f06292','#ba68c8','#7986cb','#4fc3f7','#4db6ac','#81c784','#ffb74d','#a1887f','#90a4ae']
+  let hash = 0
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  return colors[Math.abs(hash) % colors.length]
+}
+
 // 设置 Yjs 协作
 const setupYjs = () => {
   if (!editor) return
 
   const authStore = useAuthStore()
   const token = authStore.token
+  const userName = authStore.user?.nickname || authStore.user?.username || '匿名用户'
 
   yjsDoc = new Y.Doc()
   const yText = yjsDoc.getText('monaco')
@@ -211,6 +220,67 @@ const setupYjs = () => {
     yjsDoc,
     { params: { token } }
   )
+
+  // 设置本地用户信息，用于多光标显示
+  yjsProvider.awareness.setLocalStateField('user', {
+    name: userName,
+    color: getUserColor(userName),
+  })
+
+  // 动态注入远程用户光标 CSS（y-monaco 只生成 class，颜色需手动注入）
+  const styleEl = document.createElement('style')
+  styleEl.id = 'yjs-cursor-styles'
+  document.head.appendChild(styleEl)
+
+  const updateCursorStyles = () => {
+    const rules: string[] = []
+    yjsProvider!.awareness.getStates().forEach((state, clientID) => {
+      if (clientID === yjsDoc!.clientID) return
+      const color = state.user?.color || '#999'
+      const name = state.user?.name || '匿名'
+      rules.push(`
+        .yRemoteSelection-${clientID} { background-color: ${color}40; }
+        .yRemoteSelectionHead-${clientID} {
+          position: relative;
+          border-left: 2px solid ${color};
+        }
+        .yRemoteSelectionHead-${clientID}::after {
+          content: '${name.replace(/'/g, "\\'")}';
+          position: absolute;
+          top: -18px;
+          left: -2px;
+          background: ${color};
+          color: #fff;
+          font-size: 11px;
+          padding: 1px 4px;
+          border-radius: 3px;
+          white-space: nowrap;
+          pointer-events: none;
+          z-index: 100;
+        }
+      `)
+    })
+    styleEl.textContent = rules.join('\n')
+  }
+
+  yjsProvider.awareness.on('change', ({ added }: { added: number[] }) => {
+    updateCursorStyles()
+    // 有新用户加入时，直接把当前光标位置写入 awareness，让对方立即看到我的光标
+    if (added.length > 0 && editor && yjsDoc) {
+      const yText = yjsDoc.getText('monaco')
+      const sel = editor.getSelection()
+      const model = editor.getModel()
+      if (sel && model) {
+        const anchor = Y.createRelativePositionFromTypeIndex(yText, model.getOffsetAt(sel.getStartPosition()))
+        const head = Y.createRelativePositionFromTypeIndex(yText, model.getOffsetAt(sel.getEndPosition()))
+        yjsProvider!.awareness.setLocalStateField('selection', { anchor, head })
+      }
+    }
+  })
+
+  // 页面刷新/关闭前主动清除 awareness，避免残留光标
+  const handleBeforeUnload = () => yjsProvider?.awareness.setLocalState(null)
+  window.addEventListener('beforeunload', handleBeforeUnload)
 
   const updateStatus = (status: string, text: string) => {
     wsStatus.value = status as any
@@ -253,12 +323,14 @@ const setupYjs = () => {
 
 // 清理 Yjs
 const cleanupYjs = () => {
+  yjsProvider?.awareness.setLocalState(null)
   yjsBinding?.destroy()
   yjsProvider?.destroy()
   yjsDoc?.destroy()
   yjsBinding = null
   yjsProvider = null
   yjsDoc = null
+  document.getElementById('yjs-cursor-styles')?.remove()
 }
 
 // 保存文件
