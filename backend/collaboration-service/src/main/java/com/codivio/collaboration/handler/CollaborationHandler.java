@@ -11,6 +11,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class CollaborationHandler implements WebSocketHandler {
@@ -22,6 +25,8 @@ public class CollaborationHandler implements WebSocketHandler {
 
     // sessionId -> roomId
     private final Map<String, String> sessionRoomMap = new ConcurrentHashMap<>();
+
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     public CollaborationHandler(RoomManager roomManager, DocStateStore docStateStore) {
         this.roomManager = roomManager;
@@ -38,12 +43,17 @@ public class CollaborationHandler implements WebSocketHandler {
         // 1. 发 sync step1，触发客户端发来它的 state vector
         session.sendMessage(new BinaryMessage(YjsProtocol.buildSyncStep1()));
 
-        // 2. 把 Redis 中已有的所有 update 逐条发给新客户端（恢复文档状态）
+        // 2. 先发快照（若有），再发快照之后的增量——混合状态同步
+        byte[] snapshot = docStateStore.getSnapshot(roomId);
+        if (snapshot != null) {
+            session.sendMessage(new BinaryMessage(YjsProtocol.buildSyncStep2(snapshot)));
+            log.debug("Sent snapshot to session {}", session.getId());
+        }
         List<byte[]> storedUpdates = docStateStore.getUpdates(roomId);
         for (byte[] update : storedUpdates) {
             session.sendMessage(new BinaryMessage(YjsProtocol.buildSyncStep2(update)));
         }
-        log.debug("Sent {} stored updates to session {}", storedUpdates.size(), session.getId());
+        log.debug("Sent snapshot={} updates={} to session {}", snapshot != null, storedUpdates.size(), session.getId());
     }
 
     @Override
@@ -55,7 +65,11 @@ public class CollaborationHandler implements WebSocketHandler {
         if (roomId == null) return;
 
         if (YjsProtocol.isSyncStep1(data)) {
-            // 客户端请求同步：把所有存储的 update 作为 step2 回复
+            // 客户端请求同步：先发快照，再发增量
+            byte[] snapshot = docStateStore.getSnapshot(roomId);
+            if (snapshot != null) {
+                session.sendMessage(new BinaryMessage(YjsProtocol.buildSyncStep2(snapshot)));
+            }
             List<byte[]> storedUpdates = docStateStore.getUpdates(roomId);
             for (byte[] update : storedUpdates) {
                 session.sendMessage(new BinaryMessage(YjsProtocol.buildSyncStep2(update)));
@@ -73,6 +87,14 @@ public class CollaborationHandler implements WebSocketHandler {
             }
             broadcast(session, roomId, message);
 
+        } else if (YjsProtocol.isSnapshot(data)) {
+            // 前端每50次 update 上传一次快照：存为检查点，清空增量列表
+            byte[] snapshot = YjsProtocol.extractSnapshot(data);
+            if (snapshot != null) {
+                docStateStore.saveSnapshot(roomId, snapshot);
+                log.info("Snapshot saved for room {}", roomId);
+            }
+
         } else if (YjsProtocol.isAwareness(data)) {
             // 光标/在线用户信息：只广播，不存
             broadcast(session, roomId, message);
@@ -89,6 +111,16 @@ public class CollaborationHandler implements WebSocketHandler {
         String roomId = sessionRoomMap.remove(session.getId());
         if (roomId != null) {
             roomManager.leave(roomId, session);
+            // 延迟30秒再检查，避免断线重连时误清状态
+            if (roomManager.isEmpty(roomId)) {
+                final String finalRoomId = roomId;
+                scheduler.schedule(() -> {
+                    if (roomManager.isEmpty(finalRoomId)) {
+                        docStateStore.clearRoom(finalRoomId);
+                        log.info("Room {} empty for 30s, Redis state cleared", finalRoomId);
+                    }
+                }, 30, TimeUnit.SECONDS);
+            }
         }
         log.info("Disconnected: session={}, room={}", session.getId(), roomId);
     }

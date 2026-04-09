@@ -18,6 +18,8 @@ public class YjsProtocol {
 
     public static final int MSG_SYNC = 0;
     public static final int MSG_AWARENESS = 1;
+    // 自定义消息类型（>= 10 不与 y-websocket 标准类型冲突）
+    public static final int MSG_SNAPSHOT = 10;
 
     public static final int SYNC_STEP1 = 0;
     public static final int SYNC_STEP2 = 1;
@@ -75,6 +77,20 @@ public class YjsProtocol {
         writeVarInt(out, update.length);
         out.write(update, 0, update.length);
         return out.toByteArray();
+    }
+
+    public static boolean isSnapshot(byte[] msg) {
+        return msg.length >= 1 && (msg[0] & 0xFF) == MSG_SNAPSHOT;
+    }
+
+    /**
+     * 从快照消息中提取 update 字节（格式：[10, update...]）
+     */
+    public static byte[] extractSnapshot(byte[] msg) {
+        if (msg.length < 2) return null;
+        byte[] snapshot = new byte[msg.length - 1];
+        System.arraycopy(msg, 1, snapshot, 0, snapshot.length);
+        return snapshot;
     }
 
     // --- varint 编解码（lib0 格式）---

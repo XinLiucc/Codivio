@@ -43,4 +43,9 @@ public class RoomManager {
     public Set<WebSocketSession> getSessions(String roomId) {
         return rooms.getOrDefault(roomId, Collections.emptySet());
     }
+
+    public boolean isEmpty(String roomId) {
+        Set<WebSocketSession> sessions = rooms.get(roomId);
+        return sessions == null || sessions.isEmpty();
+    }
 }
