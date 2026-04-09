@@ -9,6 +9,23 @@
         <span class="project-name">{{ projectInfo?.name || '加载中...' }}</span>
         <span class="topbar-divider">/</span>
         <span class="topbar-file">{{ activeFile?.name || '未打开文件' }}</span>
+        <div v-if="activeFile" class="collab-status">
+          <span class="status-dot" :class="collabStatus"></span>
+          <span class="status-text">{{ collabStatusText }}</span>
+          <!-- 在线用户头像气泡 -->
+          <div class="online-users" v-if="onlineUsers.length > 0">
+            <el-tooltip
+              v-for="u in onlineUsers"
+              :key="u.name"
+              :content="u.name"
+              placement="bottom"
+            >
+              <div class="user-avatar" :style="{ background: u.color }">
+                {{ u.name.charAt(0).toUpperCase() }}
+              </div>
+            </el-tooltip>
+          </div>
+        </div>
       </div>
       <div class="topbar-right">
         <el-button size="small" @click="showNewFileDialog = true">
@@ -76,11 +93,15 @@
           <div class="editor-content" v-loading="editorLoading">
             <CodeEditor
               v-if="!editorLoading"
+              ref="codeEditorRef"
               v-model="editorContent"
               :filename="activeFile.name"
               :height="'100%'"
               :show-toolbar="false"
+              :project-id="projectId"
+              :file-id="activeFile.fileId ?? ''"
               @save="handleSaveFile"
+              @collab-status="(s, t) => { collabStatus = s; collabStatusText = t }"
             />
           </div>
         </div>
@@ -131,7 +152,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import {
@@ -159,6 +180,10 @@ const activeFile = ref<FileTreeNode | null>(null)
 const editorContent = ref('')
 const editorLoading = ref(false)
 const saving = ref(false)
+const codeEditorRef = ref<InstanceType<typeof CodeEditor> | null>(null)
+const collabStatus = ref('connecting')
+const collabStatusText = ref('连接中...')
+const onlineUsers = computed(() => codeEditorRef.value?.onlineUsers ?? [])
 
 // 侧边栏宽度
 const sidebarWidth = ref(240)
@@ -216,6 +241,8 @@ const handleOpenFile = async (node: FileTreeNode) => {
   activeFile.value = node
   editorLoading.value = true
   editorContent.value = ''
+  collabStatus.value = 'connecting'
+  collabStatusText.value = '连接中...'
 
   try {
     if (node.fileId) {
@@ -430,6 +457,52 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.collab-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #9d9d9d;
+  margin-left: 8px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot.connected { background: #52c41a; }
+.status-dot.connecting { background: #faad14; animation: pulse 1.2s infinite; }
+.status-dot.disconnected { background: #ff4d4f; }
+
+.online-users {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+}
+
+.user-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  cursor: default;
+  border: 1.5px solid rgba(255,255,255,0.3);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
 
 /* 主体 */
