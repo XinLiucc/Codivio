@@ -124,3 +124,8 @@ data/out/
 
 # Local file storage (physical files uploaded/created by users)
 data/files/
+
+# 论文/报告文档
+*.docx
+*.doc
+*.pdf
