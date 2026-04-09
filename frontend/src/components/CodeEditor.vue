@@ -318,6 +318,28 @@ const setupYjs = () => {
     }
   })
 
+  // 混合状态同步：每50次 update 上传一次快照
+  let updateCount = 0
+  const SNAPSHOT_INTERVAL = 50
+  yjsDoc.on('update', (_update: Uint8Array, origin: unknown) => {
+    // 跳过来自远端 provider 的 update，只统计本地编辑
+    if (origin === yjsProvider) return
+    updateCount++
+    if (updateCount >= SNAPSHOT_INTERVAL) {
+      updateCount = 0
+      const snapshot = Y.encodeStateAsUpdate(yjsDoc!)
+      // 自定义消息格式：[10, ...snapshotBytes]
+      const msg = new Uint8Array(1 + snapshot.length)
+      msg[0] = 10
+      msg.set(snapshot, 1)
+      // @ts-ignore 访问底层 WebSocket
+      const ws: WebSocket | undefined = yjsProvider?.ws
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(msg)
+      }
+    }
+  })
+
   // 绑定 Yjs 到 Monaco（MonacoBinding 接管内容同步，不再手动 setValue/getValue）
   yjsBinding = new MonacoBinding(
     yText,
