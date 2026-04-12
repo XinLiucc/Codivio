@@ -67,15 +67,6 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
-    path: '/activities',
-    name: 'Activities', 
-    component: () => import('@/views/Activities.vue'),
-    meta: {
-      requiresAuth: true,
-      title: '活动历史 - Codivio'
-    }
-  },
-  {
     path: '/projects',
     name: 'Projects',
     component: () => import('@/views/Projects.vue'), 

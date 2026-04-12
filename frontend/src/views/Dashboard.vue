@@ -24,7 +24,7 @@
 
     <!-- 统计数据卡片 -->
     <el-row :gutter="24" class="stats-row">
-      <el-col :span="6">
+      <el-col :span="8">
         <el-card class="stats-card">
           <div class="stats-item">
             <div class="stats-icon project">
@@ -38,7 +38,7 @@
         </el-card>
       </el-col>
       
-      <el-col :span="6">
+      <el-col :span="8">
         <el-card class="stats-card">
           <div class="stats-item">
             <div class="stats-icon collaboration">
@@ -51,8 +51,8 @@
           </div>
         </el-card>
       </el-col>
-      
-      <el-col :span="6">
+
+      <el-col :span="8">
         <el-card class="stats-card">
           <div class="stats-item">
             <div class="stats-icon file">
@@ -65,26 +65,12 @@
           </div>
         </el-card>
       </el-col>
-      
-      <el-col :span="6">
-        <el-card class="stats-card">
-          <div class="stats-item">
-            <div class="stats-icon activity">
-              <el-icon><TrendCharts /></el-icon>
-            </div>
-            <div class="stats-content">
-              <div class="stats-number">{{ todayActivity }}</div>
-              <div class="stats-label">今日活动</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
     </el-row>
 
     <!-- 快捷操作和项目列表 -->
     <el-row :gutter="24" class="content-row">
       <!-- 快捷操作 -->
-      <el-col :span="8">
+      <el-col :span="6">
         <el-card title="快捷操作">
           <template #header>
             <div class="card-header">
@@ -114,37 +100,12 @@
               账户设置
             </el-button>
             
-            <el-button class="action-button" @click="$router.push('/activities')">
-              <el-icon><TrendCharts /></el-icon>
-              活动历史
-            </el-button>
-          </div>
-        </el-card>
-
-        <!-- 最近活动 -->
-        <el-card title="最近活动" class="activity-card">
-          <div class="activity-list">
-            <div
-              v-for="activity in recentActivities"
-              :key="activity.id"
-              class="activity-item"
-            >
-              <div class="activity-icon">
-                <el-icon>
-                  <component :is="activity.icon" />
-                </el-icon>
-              </div>
-              <div class="activity-content">
-                <div class="activity-text">{{ activity.text }}</div>
-                <div class="activity-time">{{ activity.time }}</div>
-              </div>
-            </div>
           </div>
         </el-card>
       </el-col>
-      
+
       <!-- 项目列表 -->
-      <el-col :span="16">
+      <el-col :span="18">
         <el-card>
           <template #header>
             <div class="card-header">
@@ -219,12 +180,11 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  Sunny, User, SwitchButton, Folder, UserFilled, Document, 
-  TrendCharts, Lightning, Plus, Link, Upload, Setting,
-  ArrowRight
+  Sunny, User, SwitchButton, Folder, UserFilled, Document,
+  Lightning, Plus, Link, Upload, Setting, ArrowRight
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
-import { mockDashboardData, type DashboardData, type UserActivity } from '@/api/dashboard'
+import { mockDashboardData, type DashboardData } from '@/api/dashboard'
 import { projectAPI, type ProjectInfo } from '@/api/project'
 
 const router = useRouter()
@@ -243,13 +203,9 @@ const dashboardData = ref<DashboardData | null>(null)
 const projectCount = computed(() => dashboardData.value?.stats.projectCount || 0)
 const collaborationCount = computed(() => dashboardData.value?.stats.collaborationCount || 0)
 const fileCount = computed(() => dashboardData.value?.stats.fileCount || 0)
-const todayActivity = computed(() => dashboardData.value?.stats.todayActivity || 0)
 
 // 项目列表（通过计算属性从dashboardData获取）
 const projects = computed(() => dashboardData.value?.recentProjects || [])
-
-// 最近活动（通过计算属性从dashboardData获取）
-const recentActivities = computed(() => dashboardData.value?.recentActivities || [])
 
 // 获取问候语
 const getGreeting = () => {
@@ -474,7 +430,6 @@ onMounted(() => {
 .stats-icon.project { background: #409eff; }
 .stats-icon.collaboration { background: #67c23a; }
 .stats-icon.file { background: #e6a23c; }
-.stats-icon.activity { background: #f56c6c; }
 
 .stats-content {
   flex: 1;
@@ -516,54 +471,6 @@ onMounted(() => {
   height: 40px;
 }
 
-.activity-card {
-  margin-top: 16px;
-}
-
-.activity-list {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.activity-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid #ebeef5;
-}
-
-.activity-item:last-child {
-  border-bottom: none;
-}
-
-.activity-icon {
-  width: 32px;
-  height: 32px;
-  background: #f0f9ff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #409eff;
-  flex-shrink: 0;
-}
-
-.activity-content {
-  flex: 1;
-}
-
-.activity-text {
-  font-size: 14px;
-  color: #2c3e50;
-  line-height: 1.4;
-}
-
-.activity-time {
-  font-size: 12px;
-  color: #909399;
-  margin-top: 4px;
-}
 
 /* 项目网格 */
 .loading-area {

@@ -5,7 +5,6 @@ export interface DashboardStats {
   projectCount: number      // 我的项目数
   collaborationCount: number // 协作项目数
   fileCount: number         // 文件总数
-  todayActivity: number     // 今日活动数
 }
 
 // 项目成员信息
@@ -26,20 +25,10 @@ export interface ProjectInfo {
   updatedAt: string
 }
 
-// 用户活动记录
-export interface UserActivity {
-  id: number
-  icon: string        // 图标名称
-  text: string       // 活动描述
-  time: string       // 相对时间
-  timestamp: string  // 具体时间戳
-}
-
 // Dashboard完整数据
 export interface DashboardData {
   stats: DashboardStats
   recentProjects: ProjectInfo[]
-  recentActivities: UserActivity[]
 }
 
 /**
@@ -56,8 +45,7 @@ export const mockDashboardData = (): DashboardData => {
     stats: {
       projectCount: 3,
       collaborationCount: 5,
-      fileCount: 24,
-      todayActivity: 8
+      fileCount: 24
     },
     recentProjects: [
       {
@@ -70,7 +58,7 @@ export const mockDashboardData = (): DashboardData => {
           { id: 2, name: 'Bob', avatar: '' }
         ],
         memberCount: 2,
-        updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() // 2小时前
+        updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
       },
       {
         id: 2,
@@ -81,7 +69,7 @@ export const mockDashboardData = (): DashboardData => {
           { id: 1, name: 'Charlie', avatar: '' }
         ],
         memberCount: 1,
-        updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() // 1天前
+        updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
       },
       {
         id: 3,
@@ -94,37 +82,7 @@ export const mockDashboardData = (): DashboardData => {
           { id: 3, name: 'Frank', avatar: '' }
         ],
         memberCount: 3,
-        updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() // 3天前
-      }
-    ],
-    recentActivities: [
-      {
-        id: 1,
-        icon: 'Document',
-        text: '更新了项目文档 README.md',
-        time: '2小时前',
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 2,
-        icon: 'Plus',
-        text: '创建了新项目 "移动端应用"',
-        time: '昨天',
-        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 3,
-        icon: 'UserFilled',
-        text: '邀请了新成员加入项目',
-        time: '3天前',
-        timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 4,
-        icon: 'Edit',
-        text: '修改了文件 main.ts',
-        time: '5天前',
-        timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+        updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
       }
     ]
   }
