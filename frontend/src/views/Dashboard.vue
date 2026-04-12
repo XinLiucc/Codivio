@@ -319,35 +319,34 @@ const handleLogout = async () => {
 // 加载数据
 const loadDashboardData = async () => {
   loading.value = true
-  
-  try {
-    // 获取用户项目列表（真实API）
-    const projectsResponse = await projectAPI.getProjects()
-    const userProjects = projectsResponse.data.data
 
-    // 使用模拟数据作为基础，但替换项目数据
+  try {
+    const [projectsResponse, statsResponse] = await Promise.all([
+      projectAPI.getProjects(),
+      projectAPI.getDashboardStats()
+    ])
+    const userProjects = projectsResponse.data.data
+    const stats = statsResponse.data.data
+
     const mockData = mockDashboardData()
-    
-    // 更新真实的项目统计
-    mockData.stats.projectCount = userProjects.length
+    mockData.stats.projectCount = stats.projectCount
+    mockData.stats.collaborationCount = stats.collaborationCount
+    mockData.stats.fileCount = stats.fileCount
     mockData.recentProjects = userProjects.slice(0, 4).map(project => ({
       id: project.id,
       name: project.name,
       description: project.description,
       language: project.language,
-      members: [], // 暂时为空，可以后续扩展
+      members: [],
       updatedAt: project.updatedAt
     }))
-    
+
     dashboardData.value = mockData
-    
+
   } catch (error: any) {
-    console.error('加载项目数据失败:', error)
-    
-    // API调用失败时使用完全模拟数据
+    console.error('加载数据失败:', error)
     ElMessage.warning('部分数据使用模拟数据显示')
     dashboardData.value = mockDashboardData()
-    
   } finally {
     loading.value = false
   }

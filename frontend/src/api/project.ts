@@ -118,5 +118,13 @@ export const projectAPI = {
    */
   removeMember: (projectId: string, userId: number) => {
     return http.delete<ApiResponse<null>>(`/projects/${projectId}/members/${userId}`)
+  },
+
+  /**
+   * 获取 Dashboard 统计数据
+   * 对应后端接口: GET /api/v1/projects/stats
+   */
+  getDashboardStats: () => {
+    return http.get<ApiResponse<{ projectCount: number; collaborationCount: number; fileCount: number }>>('/projects/stats')
   }
 }

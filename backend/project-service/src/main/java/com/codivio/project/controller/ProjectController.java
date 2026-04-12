@@ -3,15 +3,22 @@ package com.codivio.project.controller;
 import com.codivio.project.dto.*;
 import com.codivio.project.exception.BaseBusinessException;
 import com.codivio.project.exception.ErrorCode;
+import com.codivio.project.entity.ProjectRole;
+import com.codivio.project.repository.ProjectFileTreeRepository;
+import com.codivio.project.repository.ProjectMemberRepository;
+import com.codivio.project.repository.ProjectRepository;
 import com.codivio.project.service.ProjectService;
 import com.codivio.project.util.GatewayUserUtil;
+import com.codivio.project.entity.ProjectFileTree;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 项目控制器
@@ -23,7 +30,16 @@ public class ProjectController {
     
     @Autowired
     private ProjectService projectService;
-    
+
+    @Autowired
+    private ProjectRepository projectRepository;
+
+    @Autowired
+    private ProjectMemberRepository projectMemberRepository;
+
+    @Autowired
+    private ProjectFileTreeRepository projectFileTreeRepository;
+
     @Autowired
     private GatewayUserUtil gatewayUserUtil;
     
@@ -54,6 +70,41 @@ public class ProjectController {
      * 
      * @return 用户的项目列表
      */
+    @GetMapping("/stats")
+    public ResultVO<Map<String, Long>> getDashboardStats() {
+        Long userId = gatewayUserUtil.getCurrentUserId();
+        if (userId == null) throw new BaseBusinessException(ErrorCode.UNAUTHORIZED);
+
+        // 我的项目数（作为 OWNER）
+        long projectCount = projectRepository.findByOwnerId(userId).size();
+
+        // 协作项目数（作为成员，角色不是 OWNER）
+        long collaborationCount = projectMemberRepository
+                .findByUserIdAndRole(userId, ProjectRole.EDITOR).size()
+                + projectMemberRepository
+                .findByUserIdAndRole(userId, ProjectRole.VIEWER).size();
+
+        // 文件总数：统计所有有权访问的项目中 FILE 类型节点
+        // 我的项目 + 协作项目
+        List<String> allProjectIds = new ArrayList<>();
+        projectRepository.findByOwnerId(userId)
+                .forEach(p -> allProjectIds.add(p.getId()));
+        projectMemberRepository.findByUserId(userId).stream()
+                .filter(m -> m.getRole() != ProjectRole.OWNER)
+                .forEach(m -> allProjectIds.add(m.getProjectId()));
+
+        long fileCount = allProjectIds.stream()
+                .mapToLong(pid -> projectFileTreeRepository
+                        .countByProjectIdAndType(pid, ProjectFileTree.FileTreeType.FILE))
+                .sum();
+
+        Map<String, Long> stats = new HashMap<>();
+        stats.put("projectCount", projectCount);
+        stats.put("collaborationCount", collaborationCount);
+        stats.put("fileCount", fileCount);
+        return ResultVO.success(stats);
+    }
+
     @GetMapping
     public ResultVO<List<ProjectResponseDTO>> getProjects() {
         
