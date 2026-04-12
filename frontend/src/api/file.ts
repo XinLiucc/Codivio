@@ -79,11 +79,7 @@ export const fileAPI = {
    * 对应后端接口: PUT /api/v1/files/{fileId}/content
    */
   updateFileContent: (fileId: string, content: string) => {
-    return http.put<ApiResponse<FileInfo>>(`/files/${fileId}/content`, content, {
-      headers: {
-        'Content-Type': 'text/plain'
-      }
-    })
+    return http.put<ApiResponse<FileInfo>>(`/files/${fileId}/content`, { content })
   },
 
   /**
@@ -110,5 +106,31 @@ export const fileAPI = {
    */
   getProjectFileStats: (projectId: string) => {
     return http.get<ApiResponse<FileStats>>(`/files/project/${projectId}/stats`)
+  },
+
+  // ===== 文件版本管理 =====
+  createVersion: (fileId: string, message: string) => {
+    return http.post<ApiResponse<FileVersionInfo>>(`/files/${fileId}/versions`, { message })
+  },
+
+  getVersions: (fileId: string) => {
+    return http.get<ApiResponse<FileVersionInfo[]>>(`/files/${fileId}/versions`)
+  },
+
+  getVersion: (fileId: string, versionId: number) => {
+    return http.get<ApiResponse<FileVersionInfo & { content: string }>>(`/files/${fileId}/versions/${versionId}`)
+  },
+
+  restoreVersion: (fileId: string, versionId: number) => {
+    return http.post<ApiResponse<void>>(`/files/${fileId}/versions/${versionId}/restore`, {})
   }
+}
+
+export interface FileVersionInfo {
+  id: number
+  version: number
+  message: string
+  createdBy: number
+  createdByName: string
+  createdAt: string
 }

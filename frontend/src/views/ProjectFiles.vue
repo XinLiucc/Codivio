@@ -9,6 +9,14 @@
         <span class="project-name">{{ projectInfo?.name || '加载中...' }}</span>
         <span class="topbar-divider">/</span>
         <span class="topbar-file">{{ activeFile?.name || '未打开文件' }}</span>
+        <template v-if="activeFile && activeVersionId !== null">
+          <el-tag size="small" type="warning" style="margin-left:4px;font-size:11px;">
+            只读 · 历史版本 v{{ versions.find(v => v.id === activeVersionId)?.version }}
+          </el-tag>
+          <el-button size="small" type="primary" style="margin-left:6px;" @click="returnToLatest">
+            回到最新版本
+          </el-button>
+        </template>
         <div v-if="activeFile" class="collab-status">
           <span class="status-dot" :class="collabStatus"></span>
           <span class="status-text">{{ collabStatusText }}</span>
@@ -36,9 +44,20 @@
           <el-icon><FolderAdd /></el-icon>
           新建目录
         </el-button>
-        <el-button size="small" type="primary" :loading="saving" :disabled="!activeFile" @click="handleSaveFile">
+        <el-button size="small" type="primary" :loading="saving"
+          :disabled="!activeFile || activeVersionId !== null" @click="() => handleSaveFile()">
           <el-icon><Check /></el-icon>
           保存
+        </el-button>
+        <el-divider v-if="activeFile" direction="vertical" style="height:16px;margin:0 2px;" />
+        <el-button v-if="activeFile" size="small" type="success" :loading="committing"
+          :disabled="activeVersionId !== null" @click="showCommitDialog = true">
+          <el-icon><Upload /></el-icon>
+          提交版本
+        </el-button>
+        <el-button v-if="activeFile" size="small" :type="showVersionPanel ? 'primary' : ''" @click="toggleVersionPanel">
+          <el-icon><Timer /></el-icon>
+          历史
         </el-button>
       </div>
     </div>
@@ -98,15 +117,106 @@
               :filename="activeFile.name"
               :height="'100%'"
               :show-toolbar="false"
-              :project-id="projectId"
-              :file-id="activeFile.fileId ?? ''"
+              :readonly="activeVersionId !== null"
+              :project-id="activeVersionId === null ? projectId : ''"
+              :file-id="activeVersionId === null ? (activeFile.fileId ?? '') : ''"
               @save="handleSaveFile"
               @collab-status="(s, t) => { collabStatus = s; collabStatusText = t }"
             />
           </div>
         </div>
       </div>
+
+      <!-- 版本历史面板 -->
+      <div v-if="showVersionPanel && activeFile" class="version-panel">
+        <div class="version-panel-header">
+          <span class="version-panel-title">{{ activeFile.name }} — 版本历史</span>
+          <el-button type="text" size="small" @click="loadVersions">
+            <el-icon><Refresh /></el-icon>
+          </el-button>
+        </div>
+        <div class="version-panel-body" v-loading="versionsLoading">
+          <div v-if="versions.length === 0 && !versionsLoading && !hasUncommittedChanges" class="version-empty">
+            <el-text type="info" size="small">暂无版本记录，提交后可在此查看历史</el-text>
+          </div>
+          <div class="version-timeline">
+            <!-- 工作区条目：有未提交改动时显示在最顶部 -->
+            <div v-if="hasUncommittedChanges && activeVersionId === null" class="version-item">
+              <div class="version-dot-wrap">
+                <div class="version-dot working"></div>
+                <div v-if="versions.length > 0" class="version-line"></div>
+              </div>
+              <div class="version-info">
+                <div class="version-msg">未提交的改动</div>
+                <div class="version-meta">
+                  <el-tag size="small" type="warning" style="padding:0 4px;height:16px;line-height:16px;font-size:10px;">工作区</el-tag>
+                  <span class="version-author" style="font-size:10px;color:#888;">已保存到数据库，未建立快照</span>
+                </div>
+                <el-button
+                  size="small"
+                  type="success"
+                  plain
+                  style="margin-top:5px;font-size:11px;padding:2px 8px;height:auto;"
+                  @click="showCommitDialog = true"
+                >提交快照</el-button>
+              </div>
+            </div>
+            <div v-for="(v, index) in versions" :key="v.id" class="version-item">
+              <div class="version-dot-wrap">
+                <div class="version-dot" :class="{ latest: index === 0 }"></div>
+                <div v-if="index < versions.length - 1" class="version-line"></div>
+              </div>
+              <div class="version-info">
+                <div class="version-msg">{{ v.message }}</div>
+                <div class="version-meta">
+                  <span class="version-num">v{{ v.version }}</span>
+                  <el-tag
+                    v-if="v.id === activeVersionId"
+                    size="small"
+                    type="success"
+                    style="padding:0 4px;height:16px;line-height:16px;font-size:10px;"
+                  >当前</el-tag>
+                  <el-tag
+                    v-else-if="activeVersionId === null && index === 0 && !hasUncommittedChanges"
+                    size="small"
+                    type="info"
+                    style="padding:0 4px;height:16px;line-height:16px;font-size:10px;"
+                  >最新</el-tag>
+                  <span class="version-author">{{ v.createdByName }}</span>
+                  <span class="version-time">{{ formatVersionTime(v.createdAt) }}</span>
+                </div>
+                <div
+                  v-if="v.id !== activeVersionId && !(activeVersionId === null && index === 0 && !hasUncommittedChanges)"
+                  class="version-actions"
+                >
+                  <el-button size="small" plain @click="handleViewVersion(v)">预览</el-button>
+                  <el-button size="small" type="warning" plain @click="handleRestoreVersion(v)">恢复</el-button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- 提交版本对话框 -->
+    <el-dialog v-model="showCommitDialog" title="提交版本" width="420px">
+      <el-form label-width="80px">
+        <el-form-item label="提交说明">
+          <el-input
+            v-model="commitMessage"
+            type="textarea"
+            :rows="3"
+            placeholder="描述本次修改（可留空）"
+            autofocus
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showCommitDialog = false">取消</el-button>
+        <el-button type="primary" :loading="committing" @click="handleCommitVersion">提交</el-button>
+      </template>
+    </el-dialog>
 
     <!-- 新建文件对话框 -->
     <el-dialog v-model="showNewFileDialog" title="新建文件" width="400px" @closed="resetNewForm">
@@ -152,17 +262,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import {
-  ArrowLeft, DocumentAdd, FolderAdd, Check, Refresh, Document, Close
+  ArrowLeft, DocumentAdd, FolderAdd, Check, Refresh, Document, Close, Upload, Timer
 } from '@element-plus/icons-vue'
 import CodeEditor from '@/components/CodeEditor.vue'
 import FileTreeItem from '@/components/FileTreeItem.vue'
 import { projectAPI, type ProjectInfo } from '@/api/project'
 import { fileTreeAPI, type FileTreeNode } from '@/api/fileTree'
-import { fileAPI } from '@/api/file'
+import { fileAPI, type FileVersionInfo } from '@/api/file'
 
 const router = useRouter()
 const route = useRoute()
@@ -185,8 +295,19 @@ const collabStatus = ref('connecting')
 const collabStatusText = ref('连接中...')
 const onlineUsers = computed(() => codeEditorRef.value?.onlineUsers ?? [])
 
+
 // 侧边栏宽度
 const sidebarWidth = ref(240)
+
+// 版本历史面板
+const showVersionPanel = ref(false)
+const versions = ref<FileVersionInfo[]>([])
+const versionsLoading = ref(false)
+const hasUncommittedChanges = ref(false)
+const showCommitDialog = ref(false)
+const commitMessage = ref('')
+const committing = ref(false)
+const activeVersionId = ref<number | null>(null)  // 当前显示的是哪个版本
 
 // 对话框状态
 const showNewFileDialog = ref(false)
@@ -243,6 +364,10 @@ const handleOpenFile = async (node: FileTreeNode) => {
   editorContent.value = ''
   collabStatus.value = 'connecting'
   collabStatusText.value = '连接中...'
+  versions.value = []
+  showVersionPanel.value = false
+  activeVersionId.value = null
+  hasUncommittedChanges.value = false
 
   try {
     if (node.fileId) {
@@ -262,24 +387,164 @@ const closeFile = () => {
   editorContent.value = ''
 }
 
-// 保存文件
-const handleSaveFile = async () => {
-  if (!activeFile.value) return
-  if (!activeFile.value.fileId) {
-    ElMessage.warning('文件尚未准备好（fileId 为空），请关闭后重新打开再保存')
-    return
+// 递归在树中找节点
+const findNodeById = (nodes: FileTreeNode[], id: number): FileTreeNode | null => {
+  for (const n of nodes) {
+    if (n.id === id) return n
+    if (n.children) {
+      const found = findNodeById(n.children, id)
+      if (found) return found
+    }
   }
+  return null
+}
+
+// 保存文件
+// Yjs 模式下 editorContent 不实时同步，必须从 editor 实例取最新值
+const handleSaveFile = async (contentOverride?: string | Event) => {
+  if (contentOverride instanceof Event) contentOverride = undefined
+  if (!activeFile.value) return
+
+  // fileId 为空说明 RabbitMQ 异步初始化还没完成，自动刷新一次
+  if (!activeFile.value.fileId) {
+    try {
+      const res = await fileTreeAPI.getFileTree(projectId)
+      const freshNode = findNodeById(res.data.data?.tree ?? [], activeFile.value.id)
+      if (freshNode?.fileId) {
+        activeFile.value = { ...activeFile.value, fileId: freshNode.fileId }
+        fileTree.value = res.data.data?.tree ?? fileTree.value
+      } else {
+        ElMessage.warning('文件初始化中，请稍等几秒再保存')
+        return
+      }
+    } catch {
+      ElMessage.warning('文件初始化中，请稍等几秒再保存')
+      return
+    }
+  }
+  const content = contentOverride ?? codeEditorRef.value?.getValue() ?? editorContent.value
   saving.value = true
   try {
-    await fileAPI.updateFileContent(activeFile.value.fileId, editorContent.value)
+    await fileAPI.updateFileContent(activeFile.value.fileId, content)
+    hasUncommittedChanges.value = true
     ElMessage.success('保存成功')
   } catch (e: any) {
     const msg = e?.response?.data?.message || e?.message || '未知错误'
     ElMessage.error(`保存失败：${msg}`)
-    console.error('Save error:', e)
   } finally {
     saving.value = false
   }
+}
+
+// 版本历史面板
+const toggleVersionPanel = () => {
+  showVersionPanel.value = !showVersionPanel.value
+  if (showVersionPanel.value && activeFile.value) loadVersions()
+}
+
+const loadVersions = async () => {
+  if (!activeFile.value?.fileId) return
+  versionsLoading.value = true
+  try {
+    const res = await fileAPI.getVersions(activeFile.value.fileId)
+    versions.value = res.data.data ?? []
+
+    // 刷新后 hasUncommittedChanges 被重置，需要与最新版本内容比对
+    if (!hasUncommittedChanges.value) {
+      const currentContent = codeEditorRef.value?.getValue() ?? editorContent.value
+      if (versions.value.length === 0) {
+        // 从未提交过，有内容即视为未提交
+        hasUncommittedChanges.value = currentContent.length > 0
+      } else {
+        // 与最新版本内容比对
+        const latestVersion = versions.value[0]
+        const vRes = await fileAPI.getVersion(activeFile.value.fileId, latestVersion.id)
+        const latestContent = vRes.data.data?.content ?? ''
+        hasUncommittedChanges.value = currentContent !== latestContent
+      }
+    }
+  } catch {
+    ElMessage.error('加载版本历史失败')
+  } finally {
+    versionsLoading.value = false
+  }
+}
+
+const handleCommitVersion = async () => {
+  if (!activeFile.value?.fileId) return
+  // 先保存
+  await handleSaveFile()
+  committing.value = true
+  try {
+    await fileAPI.createVersion(activeFile.value.fileId, commitMessage.value.trim())
+    hasUncommittedChanges.value = false
+    ElMessage.success('版本提交成功')
+    commitMessage.value = ''
+    showCommitDialog.value = false
+    if (showVersionPanel.value) loadVersions()
+  } catch (e: any) {
+    ElMessage.error(e?.message || '提交失败')
+  } finally {
+    committing.value = false
+  }
+}
+
+// 预览历史版本（只读，不修改 DB）
+const handleViewVersion = async (v: FileVersionInfo) => {
+  if (!activeFile.value?.fileId) return
+  try {
+    const res = await fileAPI.getVersion(activeFile.value.fileId, v.id)
+    const content = res.data.data?.content ?? ''
+    editorContent.value = content
+    activeVersionId.value = v.id
+    // 触发 CodeEditor 重新挂载为只读模式（断开 Yjs）
+    editorLoading.value = true
+    await nextTick()
+    editorLoading.value = false
+    ElMessage.success(`正在预览 v${v.version}「${v.message}」（只读）`)
+  } catch {
+    ElMessage.error('加载版本内容失败')
+  }
+}
+
+// 恢复到指定版本（写入 DB）
+const handleRestoreVersion = async (v: FileVersionInfo) => {
+  if (!activeFile.value?.fileId) return
+  try {
+    await ElMessageBox.confirm(
+      `将当前文件内容恢复为 v${v.version}「${v.message}」？\n此操作会覆盖当前文件，可提交新版本作为备份。`,
+      '恢复版本',
+      { confirmButtonText: '确认恢复', cancelButtonText: '取消', type: 'warning' }
+    )
+    await fileAPI.restoreVersion(activeFile.value.fileId, v.id)
+    ElMessage.success(`已恢复到 v${v.version}，可继续编辑`)
+    await returnToLatest()
+    if (showVersionPanel.value) loadVersions()
+  } catch (e: any) {
+    if (e !== 'cancel') ElMessage.error('恢复失败')
+  }
+}
+
+// 回到最新版本（重新加载当前文件内容，恢复协作编辑）
+const returnToLatest = async () => {
+  if (!activeFile.value?.fileId) return
+  try {
+    const res = await fileAPI.downloadFile(activeFile.value.fileId)
+    editorContent.value = res.data || ''
+    activeVersionId.value = null
+    // 触发 CodeEditor 重新挂载（切换 readonly + 重建 Yjs）
+    editorLoading.value = true
+    await nextTick()
+    editorLoading.value = false
+  } catch {
+    ElMessage.error('加载最新版本失败')
+  }
+}
+
+const formatVersionTime = (timeStr: string) => {
+  return new Date(timeStr).toLocaleString('zh-CN', {
+    month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+  })
 }
 
 // 新建文件（从目录上下文菜单触发）
@@ -402,6 +667,7 @@ onMounted(() => {
   loadProjectInfo()
   loadFileTree()
 })
+
 </script>
 
 <style scoped>
@@ -641,5 +907,141 @@ onMounted(() => {
   height: 100%;
   border: none;
   border-radius: 0;
+}
+/* 版本历史面板 */
+.version-panel {
+  width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: #252526;
+  border-left: 1px solid #3c3c3c;
+  overflow: hidden;
+}
+
+.version-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #2d2d2d;
+  border-bottom: 1px solid #3c3c3c;
+  font-size: 12px;
+  color: #cccccc;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.version-panel-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.version-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.version-empty {
+  padding: 20px 12px;
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+}
+
+.version-timeline {
+  padding: 4px 0;
+}
+
+.version-item {
+  display: flex;
+  gap: 8px;
+  padding: 6px 12px;
+}
+
+.version-dot-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 12px;
+  padding-top: 3px;
+}
+
+.version-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #555;
+  border: 2px solid #666;
+  flex-shrink: 0;
+}
+
+.version-dot.working {
+  background: #e6a23c;
+  border-color: #e6a23c;
+}
+
+.version-dot.latest {
+  background: #4ec9b0;
+  border-color: #4ec9b0;
+}
+
+.version-line {
+  width: 2px;
+  flex: 1;
+  background: #3c3c3c;
+  margin-top: 3px;
+  min-height: 20px;
+}
+
+.version-info {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 8px;
+}
+
+.version-msg {
+  font-size: 12px;
+  color: #cccccc;
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+.version-meta {
+  display: flex;
+  gap: 6px;
+  margin-top: 3px;
+  flex-wrap: wrap;
+}
+
+.version-num {
+  font-size: 11px;
+  color: #4ec9b0;
+  font-family: monospace;
+}
+
+.version-author {
+  font-size: 11px;
+  color: #888;
+}
+
+.version-time {
+  font-size: 11px;
+  color: #666;
+}
+
+.version-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 5px;
+}
+
+.version-actions .el-button {
+  font-size: 11px !important;
+  padding: 2px 8px !important;
+  height: auto !important;
 }
 </style>

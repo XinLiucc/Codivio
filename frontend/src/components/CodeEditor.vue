@@ -304,17 +304,18 @@ const setupYjs = () => {
     }
   })
 
-  // synced 事件补救（status 事件可能在监听前已触发）
+  // sync 事件：同步完成后更新状态，并在文档为空时用 DB 内容初始化
+  let initialized = false
   yjsProvider.on('sync', (isSynced: boolean) => {
-    if (isSynced) updateStatus('connected', '协作中')
-  })
-
-  // 首次同步完成后，如果文档为空则用已加载的文件内容初始化
-  yjsProvider.once('synced', () => {
-    if (yText.length === 0 && props.modelValue) {
-      yjsDoc!.transact(() => {
-        yText.insert(0, props.modelValue)
-      })
+    if (!isSynced) return
+    updateStatus('connected', '协作中')
+    if (!initialized) {
+      initialized = true
+      if (yText.length === 0 && props.modelValue) {
+        yjsDoc!.transact(() => {
+          yText.insert(0, props.modelValue)
+        })
+      }
     }
   })
 
@@ -347,6 +348,12 @@ const setupYjs = () => {
     new Set([editor]),
     yjsProvider.awareness
   )
+
+  // Yjs 模式下监听内容变化，emit change 供父组件做自动保存
+  editor.onDidChangeModelContent(() => {
+    const value = editor?.getValue() || ''
+    emit('change', value)
+  })
 }
 
 // 清理 Yjs

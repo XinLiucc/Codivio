@@ -57,6 +57,7 @@ CREATE TABLE file_versions (
     
     -- 变更信息
     changed_by BIGINT NOT NULL COMMENT '修改者ID',
+    created_by_name VARCHAR(100) COMMENT '修改者用户名',
     change_comment TEXT COMMENT '变更说明',
     
     -- 时间戳
