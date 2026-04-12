@@ -68,6 +68,14 @@ public class YjsProtocol {
     }
 
     /**
+     * 构造空的 sync step2 消息（空 Yjs update: [0, 0]）
+     * 用于房间无内容时仍触发客户端的 sync 事件
+     */
+    public static byte[] buildEmptySyncStep2() {
+        return buildSyncStep2(new byte[]{0, 0});
+    }
+
+    /**
      * 将一个 update 包装成 sync step2 消息发给客户端
      */
     public static byte[] buildSyncStep2(byte[] update) {

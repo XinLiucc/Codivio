@@ -11,9 +11,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 @Component
 public class CollaborationHandler implements WebSocketHandler {
@@ -25,8 +22,6 @@ public class CollaborationHandler implements WebSocketHandler {
 
     // sessionId -> roomId
     private final Map<String, String> sessionRoomMap = new ConcurrentHashMap<>();
-
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     public CollaborationHandler(RoomManager roomManager, DocStateStore docStateStore) {
         this.roomManager = roomManager;
@@ -52,6 +47,11 @@ public class CollaborationHandler implements WebSocketHandler {
         List<byte[]> storedUpdates = docStateStore.getUpdates(roomId);
         for (byte[] update : storedUpdates) {
             session.sendMessage(new BinaryMessage(YjsProtocol.buildSyncStep2(update)));
+        }
+        // 房间为空时也发一个空 step2，确保客户端 y-websocket 触发 sync 事件
+        if (snapshot == null && storedUpdates.isEmpty()) {
+            session.sendMessage(new BinaryMessage(YjsProtocol.buildEmptySyncStep2()));
+            log.debug("Sent empty step2 to trigger client sync for empty room {}", roomId);
         }
         log.debug("Sent snapshot={} updates={} to session {}", snapshot != null, storedUpdates.size(), session.getId());
     }
@@ -111,15 +111,12 @@ public class CollaborationHandler implements WebSocketHandler {
         String roomId = sessionRoomMap.remove(session.getId());
         if (roomId != null) {
             roomManager.leave(roomId, session);
-            // 延迟30秒再检查，避免断线重连时误清状态
+            // 最后一人离开立即清除房间状态
+            // 这样刷新页面（断连后重连）总能从 DB 加载最新保存的内容
+            // 多人协作时只要还有其他人在线，房间不会清除
             if (roomManager.isEmpty(roomId)) {
-                final String finalRoomId = roomId;
-                scheduler.schedule(() -> {
-                    if (roomManager.isEmpty(finalRoomId)) {
-                        docStateStore.clearRoom(finalRoomId);
-                        log.info("Room {} empty for 30s, Redis state cleared", finalRoomId);
-                    }
-                }, 30, TimeUnit.SECONDS);
+                docStateStore.clearRoom(roomId);
+                log.info("Room {} empty, Redis state cleared immediately", roomId);
             }
         }
         log.info("Disconnected: session={}, room={}", session.getId(), roomId);
