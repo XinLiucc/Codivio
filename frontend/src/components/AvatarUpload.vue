@@ -59,10 +59,7 @@ const authStore = useAuthStore()
 
 const uploading = ref(false)
 
-// 上传URL和请求头（注意：后端暂未实现头像上传接口，暂时禁用上传功能）
-const uploadUrl = computed(() => 
-  '/api/v1/files/upload-avatar' // 占位URL，实际不存在
-)
+const uploadUrl = computed(() => '/api/v1/users/avatar')
 
 const uploadHeaders = computed(() => ({
   'Authorization': `Bearer ${authStore.token}`
@@ -70,19 +67,26 @@ const uploadHeaders = computed(() => ({
 
 // 上传前验证
 const beforeUpload: UploadProps['beforeUpload'] = (file) => {
-  // 暂时禁用上传功能，因为后端头像上传接口尚未实现
-  ElMessage.warning('头像上传功能暂未开放，请等待后端接口实现')
-  return false
+  const isImage = ['image/jpeg', 'image/png', 'image/gif'].includes(file.type)
+  if (!isImage) {
+    ElMessage.error('仅支持 JPG、PNG、GIF 格式')
+    return false
+  }
+  const isLt2M = file.size / 1024 / 1024 < 2
+  if (!isLt2M) {
+    ElMessage.error('文件大小不能超过 2MB')
+    return false
+  }
+  uploading.value = true
+  return true
 }
 
 // 上传成功
 const handleSuccess: UploadProps['onSuccess'] = (response) => {
   uploading.value = false
-  
   if (response.code === 200) {
-    const avatarUrl = response.data.url
     ElMessage.success('头像上传成功')
-    emit('success', avatarUrl)
+    emit('success', response.data.avatarUrl)
   } else {
     ElMessage.error(response.message || '上传失败')
     emit('error', new Error(response.message))

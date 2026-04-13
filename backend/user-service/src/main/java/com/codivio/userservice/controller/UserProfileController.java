@@ -9,7 +9,20 @@ import com.codivio.userservice.service.UserService;
 import com.codivio.userservice.util.GatewayUserUtil;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * 用户信息管理控制器
@@ -37,9 +50,12 @@ public class UserProfileController {
 
     @Autowired
     private UserService userService;
-    
+
     @Autowired
     private GatewayUserUtil gatewayUserUtil;
+
+    @Value("${avatar.upload.dir:./data/avatars}")
+    private String avatarUploadDir;
     
     /**
      * 获取当前用户信息
@@ -156,5 +172,75 @@ public class UserProfileController {
 
         // 3. 返回更新后的用户信息
         return ResultVO.success(updatedUser);
+    }
+
+    /**
+     * 上传头像
+     * POST /api/v1/users/avatar
+     */
+    @PostMapping("/avatar")
+    public ResultVO<Map<String, String>> uploadAvatar(@RequestParam("file") MultipartFile file) throws IOException {
+        Long userId = gatewayUserUtil.getCurrentUserId();
+        if (userId == null) {
+            throw new BaseBusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        // 校验文件类型
+        String contentType = file.getContentType();
+        if (contentType == null || (!contentType.equals("image/jpeg") && !contentType.equals("image/png") && !contentType.equals("image/gif"))) {
+            throw new BaseBusinessException(ErrorCode.INVALID_PARAMETER, "仅支持 JPG、PNG、GIF 格式");
+        }
+
+        // 确保目录存在
+        Path uploadPath = Paths.get(avatarUploadDir);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        // 生成文件名：userId + 随机后缀，防止缓存问题
+        String ext = contentType.equals("image/png") ? ".png" : contentType.equals("image/gif") ? ".gif" : ".jpg";
+        String filename = userId + "_" + UUID.randomUUID().toString().substring(0, 8) + ext;
+        Path filePath = uploadPath.resolve(filename);
+
+        // 删除该用户旧头像
+        Files.list(uploadPath)
+                .filter(p -> p.getFileName().toString().startsWith(userId + "_"))
+                .forEach(p -> { try { Files.deleteIfExists(p); } catch (IOException ignored) {} });
+
+        // 保存文件
+        file.transferTo(filePath.toFile());
+
+        // 更新 DB 中的 avatar_url
+        String avatarUrl = "/api/v1/users/avatar/" + filename;
+        UserUpdateDTO updateDTO = new UserUpdateDTO();
+        updateDTO.setAvatarUrl(avatarUrl);
+        userService.updateUser(userId, updateDTO);
+
+        return ResultVO.success(Map.of("avatarUrl", avatarUrl));
+    }
+
+    /**
+     * 访问头像文件
+     * GET /api/v1/users/avatar/{filename}
+     */
+    @GetMapping("/avatar/{filename}")
+    public ResponseEntity<Resource> getAvatar(@PathVariable String filename) throws IOException {
+        // 防止路径穿越攻击
+        if (filename.contains("..") || filename.contains("/")) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Path filePath = Paths.get(avatarUploadDir).resolve(filename);
+        if (!Files.exists(filePath)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Resource resource = new FileSystemResource(filePath);
+        String contentType = Files.probeContentType(filePath);
+        if (contentType == null) contentType = "image/jpeg";
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .body(resource);
     }
 }
