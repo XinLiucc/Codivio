@@ -15,42 +15,18 @@
 
       <el-form label-width="100px" class="settings-form">
         <el-form-item label="主题模式">
-          <el-radio-group v-model="settings.theme" @change="handleThemeChange">
-            <el-radio value="light">
-              <el-icon><Sunny /></el-icon>
-              浅色模式
-            </el-radio>
-            <el-radio value="dark">
-              <el-icon><Moon /></el-icon>
-              深色模式
-            </el-radio>
-            <el-radio value="auto">
-              <el-icon><Monitor /></el-icon>
-              跟随系统
-            </el-radio>
-          </el-radio-group>
-        </el-form-item>
-
-        <el-form-item label="主题色">
-          <div class="color-picker-group">
+          <div class="theme-options">
             <div
-              v-for="color in themeColors"
-              :key="color.value"
-              class="color-option"
-              :class="{ active: settings.primaryColor === color.value }"
-              :title="color.name"
-              @click="handleColorChange(color.value)"
+              v-for="opt in themeOptions"
+              :key="opt.value"
+              class="theme-option"
+              :class="{ active: theme === opt.value }"
+              @click="selectTheme(opt.value)"
             >
-              <div class="color-preview" :style="{ backgroundColor: color.value }">
-                <el-icon v-if="settings.primaryColor === color.value" class="check-icon"><Check /></el-icon>
-              </div>
+              <el-icon class="theme-icon"><component :is="opt.icon" /></el-icon>
+              <span>{{ opt.label }}</span>
             </div>
           </div>
-        </el-form-item>
-
-        <el-form-item label="紧凑模式">
-          <el-switch v-model="settings.compact" @change="handleCompactChange" />
-          <span class="form-tip">启用后界面元素间距更小，可显示更多内容</span>
         </el-form-item>
 
         <el-form-item>
@@ -63,60 +39,40 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Monitor, Sunny, Moon, Check } from '@element-plus/icons-vue'
+import { Monitor, Sunny, Moon } from '@element-plus/icons-vue'
 
 const saving = ref(false)
+const theme = ref('light')
 
-const settings = reactive({
-  theme: 'light',
-  primaryColor: '#409eff',
-  compact: false,
-})
-
-const themeColors = [
-  { name: '蓝色', value: '#409eff' },
-  { name: '绿色', value: '#67c23a' },
-  { name: '橙色', value: '#e6a23c' },
-  { name: '红色', value: '#f56c6c' },
-  { name: '紫色', value: '#9c88ff' },
-  { name: '粉色', value: '#f093fb' },
+const themeOptions = [
+  { value: 'light', label: '浅色模式', icon: Sunny },
+  { value: 'dark',  label: '深色模式', icon: Moon },
+  { value: 'auto',  label: '跟随系统', icon: Monitor },
 ]
 
-const handleThemeChange = (theme: string) => {
-  applyTheme(theme)
-  ElMessage.success(`已切换到${theme === 'light' ? '浅色' : theme === 'dark' ? '深色' : '跟随系统'}模式`)
-}
-
-const handleColorChange = (color: string) => {
-  settings.primaryColor = color
-  document.documentElement.style.setProperty('--el-color-primary', color)
-  ElMessage.success('主题色已更新')
-}
-
-const handleCompactChange = (compact: boolean) => {
-  document.documentElement.classList.toggle('compact', compact)
-  ElMessage.success(`已${compact ? '启用' : '禁用'}紧凑模式`)
-}
-
-const applyTheme = (theme: string) => {
+const applyTheme = (val: string) => {
   const html = document.documentElement
-  if (theme === 'dark') {
+  if (val === 'dark') {
     html.classList.add('dark')
-  } else if (theme === 'light') {
+  } else if (val === 'light') {
     html.classList.remove('dark')
   } else {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    html.classList.toggle('dark', prefersDark)
+    html.classList.toggle('dark', window.matchMedia('(prefers-color-scheme: dark)').matches)
   }
+}
+
+const selectTheme = (val: string) => {
+  theme.value = val
+  applyTheme(val)
 }
 
 const saveSettings = async () => {
   saving.value = true
   try {
-    await new Promise(resolve => setTimeout(resolve, 500))
-    localStorage.setItem('codivio-settings', JSON.stringify(settings))
+    await new Promise(resolve => setTimeout(resolve, 300))
+    localStorage.setItem('codivio-settings', JSON.stringify({ theme: theme.value }))
     ElMessage.success('设置已保存')
   } finally {
     saving.value = false
@@ -124,10 +80,8 @@ const saveSettings = async () => {
 }
 
 const resetSettings = () => {
-  Object.assign(settings, { theme: 'light', primaryColor: '#409eff', compact: false })
+  theme.value = 'light'
   applyTheme('light')
-  document.documentElement.style.setProperty('--el-color-primary', '#409eff')
-  document.documentElement.classList.remove('compact')
   localStorage.removeItem('codivio-settings')
   ElMessage.success('已恢复默认设置')
 }
@@ -137,13 +91,9 @@ onMounted(() => {
   if (saved) {
     try {
       const parsed = JSON.parse(saved)
-      Object.assign(settings, parsed)
-      applyTheme(settings.theme)
-      document.documentElement.style.setProperty('--el-color-primary', settings.primaryColor)
-      document.documentElement.classList.toggle('compact', settings.compact)
-    } catch {
-      // 忽略解析错误
-    }
+      theme.value = parsed.theme || 'light'
+      applyTheme(theme.value)
+    } catch {}
   }
 })
 </script>
@@ -152,6 +102,8 @@ onMounted(() => {
 .settings-container {
   padding: 32px;
   max-width: 700px;
+  min-height: 100vh;
+  background: var(--app-bg);
 }
 
 .settings-header {
@@ -161,7 +113,7 @@ onMounted(() => {
 .settings-header h2 {
   margin: 0 0 6px;
   font-size: 22px;
-  color: #1a1a2e;
+  color: var(--logo-text-color);
 }
 
 .settings-subtitle {
@@ -186,40 +138,39 @@ onMounted(() => {
   padding: 8px 0;
 }
 
-.color-picker-group {
+/* 主题选择卡片 */
+.theme-options {
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.color-option {
-  cursor: pointer;
-  border-radius: 6px;
-  overflow: hidden;
-  border: 2px solid transparent;
-  transition: border-color 0.15s;
-}
-
-.color-option.active {
-  border-color: #303133;
-}
-
-.color-preview {
-  width: 32px;
-  height: 32px;
+.theme-option {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-}
-
-.check-icon {
-  color: #fff;
-  font-size: 16px;
-}
-
-.form-tip {
-  margin-left: 10px;
-  color: #909399;
+  gap: 8px;
+  padding: 16px 24px;
+  border: 2px solid var(--sidebar-border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--nav-text);
+  background: var(--sidebar-bg);
   font-size: 13px;
+}
+
+.theme-option:hover {
+  border-color: #409eff;
+  color: #409eff;
+}
+
+.theme-option.active {
+  border-color: #409eff;
+  color: #409eff;
+  background: var(--nav-active-bg);
+}
+
+.theme-icon {
+  font-size: 24px;
 }
 </style>
