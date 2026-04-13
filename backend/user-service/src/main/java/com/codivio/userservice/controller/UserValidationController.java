@@ -6,6 +6,7 @@ import com.codivio.userservice.entity.User;
 import com.codivio.userservice.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 /**
  * 用户验证控制器
@@ -52,6 +53,18 @@ public class UserValidationController {
      * @param username 用户名
      * @return 用户验证结果
      */
+    /**
+     * 根据用户名关键字模糊搜索用户（供前端添加成员时使用）
+     *
+     * @param keyword 搜索关键字
+     * @return 匹配的用户列表（最多10条）
+     */
+    @GetMapping("/search")
+    public ResultVO<List<UserValidationDTO>> searchUsers(@RequestParam String keyword) {
+        List<UserValidationDTO> result = userService.searchUsers(keyword);
+        return ResultVO.success(result);
+    }
+
     @GetMapping("/validate-username/{username}")
     public ResultVO<UserValidationDTO> validateUserByUsername(@PathVariable String username) {
         try {

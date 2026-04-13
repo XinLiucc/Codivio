@@ -23,7 +23,17 @@ public class ProjectMemberDTO {
      * 用户ID
      */
     private Long userId;
-    
+
+    /**
+     * 用户名
+     */
+    private String username;
+
+    /**
+     * 邮箱
+     */
+    private String email;
+
     /**
      * 成员角色
      */
@@ -68,6 +78,22 @@ public class ProjectMemberDTO {
     
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public ProjectRole getRole() {

@@ -6,7 +6,7 @@
       :class="{ active: node.type === 'file' && node.id === activeId, directory: node.type === 'directory' }"
       :style="{ paddingLeft: depth * 16 + 8 + 'px' }"
       @click="handleClick"
-      @contextmenu.prevent="showMenu"
+      @contextmenu.prevent="props.readonly ? undefined : showMenu"
     >
       <!-- 展开箭头 -->
       <el-icon class="arrow" :class="{ expanded: isOpen, invisible: node.type === 'file' }">
@@ -32,6 +32,7 @@
         :node="child"
         :active-id="activeId"
         :depth="depth + 1"
+        :readonly="props.readonly"
         @open="$emit('open', $event)"
         @new-file="$emit('new-file', $event)"
         @new-dir="$emit('new-dir', $event)"
@@ -77,6 +78,7 @@ const props = defineProps<{
   node: FileTreeNode
   activeId: number | null
   depth?: number
+  readonly?: boolean
 }>()
 
 const emit = defineEmits<{

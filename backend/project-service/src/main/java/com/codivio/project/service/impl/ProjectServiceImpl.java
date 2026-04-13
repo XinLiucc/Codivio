@@ -241,18 +241,28 @@ public class ProjectServiceImpl implements ProjectService {
         // 2. 查询项目的所有成员
         List<ProjectMember> projectMembers = projectMemberRepository.findByProjectId(projectId);
         
-        // 3. 转换为DTO列表
+        // 3. 转换为DTO列表，并通过用户服务富化 username/email
         List<ProjectMemberDTO> projectMemberDTOS = new ArrayList<>();
         for(ProjectMember projectMember : projectMembers) {
-            ProjectMemberDTO projectMemberDTO =  new ProjectMemberDTO();
+            ProjectMemberDTO projectMemberDTO = new ProjectMemberDTO();
             projectMemberDTO.setId(projectMember.getId());
             projectMemberDTO.setProjectId(projectMember.getProjectId());
             projectMemberDTO.setUserId(projectMember.getUserId());
             projectMemberDTO.setRole(projectMember.getRole());
             projectMemberDTO.setJoinedAt(projectMember.getJoinedAt());
+            // 调用用户服务获取用户名和邮箱
+            try {
+                ResultVO<UserValidationDTO> userResult = userServiceClient.validateUser(projectMember.getUserId());
+                if (userResult != null && userResult.getData() != null && userResult.getData().isExists()) {
+                    projectMemberDTO.setUsername(userResult.getData().getUsername());
+                    projectMemberDTO.setEmail(userResult.getData().getEmail());
+                }
+            } catch (Exception e) {
+                // 用户服务不可用时不影响成员列表加载
+            }
             projectMemberDTOS.add(projectMemberDTO);
         }
-        
+
         return projectMemberDTOS;
     }
     

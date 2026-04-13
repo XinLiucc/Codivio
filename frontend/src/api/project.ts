@@ -86,6 +86,14 @@ export const projectAPI = {
   },
 
   /**
+   * 获取当前用户在项目中的角色
+   * 对应后端接口: GET /api/v1/projects/{projectId}/my-role
+   */
+  getMyRole: (projectId: string) => {
+    return http.get<ApiResponse<{ role: string }>>(`/projects/${projectId}/my-role`)
+  },
+
+  /**
    * 获取项目成员列表
    * 对应后端接口: GET /api/v1/projects/{projectId}/members
    */

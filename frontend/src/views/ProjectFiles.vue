@@ -17,7 +17,8 @@
             回到最新版本
           </el-button>
         </template>
-        <div v-if="activeFile" class="collab-status">
+        <el-tag v-if="isViewer" size="small" type="info" style="margin-left:8px;">只读</el-tag>
+        <div v-if="activeFile && !isViewer" class="collab-status">
           <span class="status-dot" :class="collabStatus"></span>
           <span class="status-text">{{ collabStatusText }}</span>
           <!-- 在线用户头像气泡 -->
@@ -36,25 +37,27 @@
         </div>
       </div>
       <div class="topbar-right">
-        <el-button size="small" @click="showNewFileDialog = true">
-          <el-icon><DocumentAdd /></el-icon>
-          新建文件
-        </el-button>
-        <el-button size="small" @click="showNewDirDialog = true">
-          <el-icon><FolderAdd /></el-icon>
-          新建目录
-        </el-button>
-        <el-button size="small" type="primary" :loading="saving"
-          :disabled="!activeFile || activeVersionId !== null" @click="() => handleSaveFile()">
-          <el-icon><Check /></el-icon>
-          保存
-        </el-button>
-        <el-divider v-if="activeFile" direction="vertical" style="height:16px;margin:0 2px;" />
-        <el-button v-if="activeFile" size="small" type="success" :loading="committing"
-          :disabled="activeVersionId !== null" @click="showCommitDialog = true">
-          <el-icon><Upload /></el-icon>
-          提交版本
-        </el-button>
+        <template v-if="!isViewer">
+          <el-button size="small" @click="showNewFileDialog = true">
+            <el-icon><DocumentAdd /></el-icon>
+            新建文件
+          </el-button>
+          <el-button size="small" @click="showNewDirDialog = true">
+            <el-icon><FolderAdd /></el-icon>
+            新建目录
+          </el-button>
+          <el-button size="small" type="primary" :loading="saving"
+            :disabled="!activeFile || activeVersionId !== null" @click="() => handleSaveFile()">
+            <el-icon><Check /></el-icon>
+            保存
+          </el-button>
+          <el-divider v-if="activeFile" direction="vertical" style="height:16px;margin:0 2px;" />
+          <el-button v-if="activeFile" size="small" type="success" :loading="committing"
+            :disabled="activeVersionId !== null" @click="showCommitDialog = true">
+            <el-icon><Upload /></el-icon>
+            提交版本
+          </el-button>
+        </template>
         <el-button v-if="activeFile" size="small" :type="showVersionPanel ? 'primary' : ''" @click="toggleVersionPanel">
           <el-icon><Timer /></el-icon>
           历史
@@ -82,11 +85,12 @@
             :key="node.id"
             :node="node"
             :active-id="activeFile?.id ?? null"
+            :readonly="isViewer"
             @open="handleOpenFile"
-            @new-file="handleNewFileInDir"
-            @new-dir="handleNewDirInDir"
-            @rename="handleRenameNode"
-            @delete="handleDeleteNode"
+            @new-file="isViewer ? undefined : handleNewFileInDir"
+            @new-dir="isViewer ? undefined : handleNewDirInDir"
+            @rename="isViewer ? undefined : handleRenameNode"
+            @delete="isViewer ? undefined : handleDeleteNode"
           />
         </div>
 
@@ -117,8 +121,8 @@
               :filename="activeFile.name"
               :height="'100%'"
               :show-toolbar="false"
-              :readonly="activeVersionId !== null"
-              :project-id="activeVersionId === null ? projectId : ''"
+              :readonly="activeVersionId !== null || isViewer"
+              :project-id="activeVersionId === null && !isViewer ? projectId : ''"
               :file-id="activeVersionId === null ? (activeFile.fileId ?? '') : ''"
               @save="handleSaveFile"
               @collab-status="(s, t) => { collabStatus = s; collabStatusText = t }"
@@ -153,6 +157,7 @@
                   <span class="version-author" style="font-size:10px;color:#888;">已保存到数据库，未建立快照</span>
                 </div>
                 <el-button
+                  v-if="!isViewer"
                   size="small"
                   type="success"
                   plain
@@ -190,7 +195,7 @@
                   class="version-actions"
                 >
                   <el-button size="small" plain @click="handleViewVersion(v)">预览</el-button>
-                  <el-button size="small" type="warning" plain @click="handleRestoreVersion(v)">恢复</el-button>
+                  <el-button v-if="!isViewer" size="small" type="warning" plain @click="handleRestoreVersion(v)">恢复</el-button>
                 </div>
               </div>
             </div>
@@ -284,6 +289,10 @@ const projectInfo = ref<ProjectInfo | null>(null)
 // 文件树
 const fileTree = ref<FileTreeNode[]>([])
 const treeLoading = ref(false)
+
+// 当前用户角色
+const myRole = ref<string>('OWNER')
+const isViewer = computed(() => myRole.value === 'VIEWER')
 
 // 编辑器
 const activeFile = ref<FileTreeNode | null>(null)
@@ -663,9 +672,16 @@ const startResize = (e: MouseEvent) => {
   document.addEventListener('mouseup', onMouseUp)
 }
 
-onMounted(() => {
+onMounted(async () => {
   loadProjectInfo()
   loadFileTree()
+  try {
+    const res = await projectAPI.getMyRole(projectId)
+    myRole.value = res.data.data.role
+  } catch (e) {
+    // 获取失败默认当 VIEWER 处理，保守策略
+    myRole.value = 'VIEWER'
+  }
 })
 
 </script>

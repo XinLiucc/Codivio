@@ -180,6 +180,29 @@ public class ProjectController {
     }
 
     /**
+     * 获取当前用户在项目中的角色
+     * GET /api/v1/projects/{projectId}/my-role
+     */
+    @GetMapping("/{projectId}/my-role")
+    public ResultVO<Map<String, String>> getMyRole(
+            @PathVariable("projectId") String projectId
+    ) {
+        Long userId = gatewayUserUtil.getCurrentUserId();
+        if (userId == null) {
+            throw new BaseBusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        var memberOpt = projectMemberRepository.findByProjectIdAndUserId(projectId, userId);
+        if (memberOpt.isEmpty()) {
+            throw new BaseBusinessException(ErrorCode.PROJECT_ACCESS_DENIED);
+        }
+
+        Map<String, String> result = new HashMap<>();
+        result.put("role", memberOpt.get().getRole().name());
+        return ResultVO.success(result);
+    }
+
+    /**
      * 获取项目成员列表
      * GET /api/v1/projects/{projectId}/members
      * 
