@@ -59,43 +59,8 @@
 
     <!-- 快捷操作和项目列表 -->
     <el-row :gutter="24" class="content-row">
-      <!-- 快捷操作 -->
-      <el-col :span="6">
-        <el-card title="快捷操作">
-          <template #header>
-            <div class="card-header">
-              <span>快捷操作</span>
-              <el-icon><Lightning /></el-icon>
-            </div>
-          </template>
-          
-          <div class="quick-actions">
-            <el-button type="primary" class="action-button" @click="createProject">
-              <el-icon><Plus /></el-icon>
-              新建项目
-            </el-button>
-            
-            <el-button class="action-button" @click="$router.push('/projects')">
-              <el-icon><Files /></el-icon>
-              项目管理
-            </el-button>
-
-            <el-button class="action-button" @click="$router.push('/settings')">
-              <el-icon><Tools /></el-icon>
-              偏好设置
-            </el-button>
-            
-            <el-button class="action-button" @click="$router.push('/profile')">
-              <el-icon><Setting /></el-icon>
-              账户设置
-            </el-button>
-            
-          </div>
-        </el-card>
-      </el-col>
-
       <!-- 项目列表 -->
-      <el-col :span="18">
+      <el-col :span="24">
         <el-card>
           <template #header>
             <div class="card-header">
@@ -155,8 +120,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  Sunny, Folder, UserFilled, Document,
-  Lightning, Plus, Files, Tools, Setting, ArrowRight
+  Sunny, Folder, UserFilled, Document, Plus, ArrowRight
 } from '@element-plus/icons-vue'
 import { type DashboardData } from '@/api/dashboard'
 import { projectAPI } from '@/api/project'
