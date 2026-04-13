@@ -38,11 +38,11 @@
       </div>
       <div class="topbar-right">
         <template v-if="!isViewer">
-          <el-button size="small" @click="showNewFileDialog = true">
+          <el-button size="small" @click="startRootCreate('file')">
             <el-icon><DocumentAdd /></el-icon>
             新建文件
           </el-button>
-          <el-button size="small" @click="showNewDirDialog = true">
+          <el-button size="small" @click="startRootCreate('dir')">
             <el-icon><FolderAdd /></el-icon>
             新建目录
           </el-button>
@@ -71,28 +71,67 @@
       <div class="ide-sidebar" :style="{ width: sidebarWidth + 'px' }">
         <div class="sidebar-header">
           <span class="sidebar-title">文件</span>
-          <el-button type="text" size="small" @click="loadFileTree">
-            <el-icon><Refresh /></el-icon>
-          </el-button>
+          <div class="sidebar-header-actions">
+            <el-icon v-if="!isViewer" class="header-action-icon" title="新建文件" @click="startRootCreate('file')">
+              <DocumentAdd />
+            </el-icon>
+            <el-icon v-if="!isViewer" class="header-action-icon" title="新建文件夹" @click="startRootCreate('dir')">
+              <FolderAdd />
+            </el-icon>
+            <el-icon class="header-action-icon" title="刷新" @click="loadFileTree">
+              <Refresh />
+            </el-icon>
+          </div>
         </div>
 
         <div v-loading="treeLoading" class="sidebar-tree">
           <div v-if="fileTree.length === 0 && !treeLoading" class="tree-empty">
-            <el-text type="info" size="small">暂无文件</el-text>
+            <el-text type="info" size="small">暂无文件，点击上方图标创建</el-text>
           </div>
-          <FileTreeItem
-            v-for="node in fileTree"
-            :key="node.id"
-            :node="node"
-            :active-id="activeFile?.id ?? null"
-            :readonly="isViewer"
-            @open="handleOpenFile"
-            @new-file="isViewer ? undefined : handleNewFileInDir"
-            @new-dir="isViewer ? undefined : handleNewDirInDir"
-            @rename="isViewer ? undefined : handleRenameNode"
-            @delete="isViewer ? undefined : handleDeleteNode"
-          />
+          <el-tree
+            v-else
+            ref="elTreeRef"
+            :data="fileTree"
+            :props="{ label: 'name', children: 'children', isLeaf: (d: FileTreeNode) => d.type === 'file' }"
+            node-key="id"
+            :current-node-key="activeFile?.id ?? undefined"
+            highlight-current
+            :expand-on-click-node="false"
+            :indent="16"
+            @node-click="handleNodeClick"
+            @node-contextmenu="handleContextMenu"
+          >
+            <template #default="{ node, data }">
+              <div class="tree-node-inner">
+                <el-icon class="tree-node-icon" :class="{ 'icon-dir': data.type === 'directory' }">
+                  <FolderOpened v-if="data.type === 'directory' && node.expanded" />
+                  <Folder v-else-if="data.type === 'directory'" />
+                  <Document v-else />
+                </el-icon>
+                <span class="tree-node-label">{{ data.name }}</span>
+                <span v-if="!isViewer" class="tree-node-actions">
+                  <el-icon v-if="data.type === 'directory'" title="新建文件" @click.stop="createInDir(data, 'file')"><DocumentAdd /></el-icon>
+                  <el-icon v-if="data.type === 'directory'" title="新建文件夹" @click.stop="createInDir(data, 'dir')"><FolderAdd /></el-icon>
+                  <el-icon title="重命名" @click.stop="renameNode(data)"><Edit /></el-icon>
+                  <el-icon title="删除" @click.stop="deleteNode(data)"><Delete /></el-icon>
+                </span>
+              </div>
+            </template>
+          </el-tree>
         </div>
+
+        <!-- 右键菜单 -->
+        <teleport to="body">
+          <div v-if="ctxVisible" class="ctx-menu" :style="{ left: ctxX + 'px', top: ctxY + 'px' }" @click.stop>
+            <template v-if="ctxNode?.type === 'directory'">
+              <div class="ctx-item" @click="createInDir(ctxNode!, 'file'); ctxVisible = false"><el-icon><DocumentAdd /></el-icon>新建文件</div>
+              <div class="ctx-item" @click="createInDir(ctxNode!, 'dir'); ctxVisible = false"><el-icon><FolderAdd /></el-icon>新建文件夹</div>
+              <div class="ctx-divider" />
+            </template>
+            <div class="ctx-item" @click="renameNode(ctxNode!); ctxVisible = false"><el-icon><Edit /></el-icon>重命名</div>
+            <div class="ctx-item danger" @click="deleteNode(ctxNode!); ctxVisible = false"><el-icon><Delete /></el-icon>删除</div>
+          </div>
+        </teleport>
 
         <!-- 拖拽调整宽度 -->
         <div class="sidebar-resizer" @mousedown="startResize" />
@@ -223,58 +262,19 @@
       </template>
     </el-dialog>
 
-    <!-- 新建文件对话框 -->
-    <el-dialog v-model="showNewFileDialog" title="新建文件" width="400px" @closed="resetNewForm">
-      <el-form :model="newForm" :rules="newFileRules" ref="newFormRef" label-width="80px">
-        <el-form-item label="文件名" prop="name">
-          <el-input v-model="newForm.name" placeholder="例如: main.js" autofocus />
-        </el-form-item>
-        <el-form-item label="路径">
-          <el-input v-model="newForm.parentPath" placeholder="例如: /src（留空表示根目录）" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="showNewFileDialog = false">取消</el-button>
-        <el-button type="primary" :loading="creating" @click="handleCreateFile">创建</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 新建目录对话框 -->
-    <el-dialog v-model="showNewDirDialog" title="新建目录" width="400px" @closed="resetNewForm">
-      <el-form :model="newForm" :rules="newDirRules" ref="newDirFormRef" label-width="80px">
-        <el-form-item label="目录名" prop="name">
-          <el-input v-model="newForm.name" placeholder="例如: components" autofocus />
-        </el-form-item>
-        <el-form-item label="路径">
-          <el-input v-model="newForm.parentPath" placeholder="例如: /src（留空表示根目录）" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="showNewDirDialog = false">取消</el-button>
-        <el-button type="primary" :loading="creating" @click="handleCreateDir">创建</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 重命名对话框 -->
-    <el-dialog v-model="showRenameDialog" title="重命名" width="400px">
-      <el-input v-model="renameValue" placeholder="新名称" autofocus @keyup.enter="confirmRename" />
-      <template #footer>
-        <el-button @click="showRenameDialog = false">取消</el-button>
-        <el-button type="primary" @click="confirmRename">确认</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  ArrowLeft, DocumentAdd, FolderAdd, Check, Refresh, Document, Close, Upload, Timer
+  ArrowLeft, DocumentAdd, FolderAdd, Edit, Delete, Check, Refresh,
+  Document, Folder, FolderOpened, Close, Upload, Timer
 } from '@element-plus/icons-vue'
 import CodeEditor from '@/components/CodeEditor.vue'
-import FileTreeItem from '@/components/FileTreeItem.vue'
+import type { ElTree } from 'element-plus'
 import { projectAPI, type ProjectInfo } from '@/api/project'
 import { fileTreeAPI, type FileTreeNode } from '@/api/fileTree'
 import { fileAPI, type FileVersionInfo } from '@/api/file'
@@ -306,7 +306,7 @@ const onlineUsers = computed(() => codeEditorRef.value?.onlineUsers ?? [])
 
 
 // 侧边栏宽度
-const sidebarWidth = ref(240)
+const sidebarWidth = ref(280)
 
 // 版本历史面板
 const showVersionPanel = ref(false)
@@ -318,26 +318,94 @@ const commitMessage = ref('')
 const committing = ref(false)
 const activeVersionId = ref<number | null>(null)  // 当前显示的是哪个版本
 
-// 对话框状态
-const showNewFileDialog = ref(false)
-const showNewDirDialog = ref(false)
-const showRenameDialog = ref(false)
-const creating = ref(false)
+// el-tree ref
+const elTreeRef = ref<InstanceType<typeof ElTree> | null>(null)
 
-// 新建表单
-const newForm = reactive({ name: '', parentPath: '' })
-const newFormRef = ref<FormInstance>()
-const newDirFormRef = ref<FormInstance>()
+// 右键菜单
+const ctxVisible = ref(false)
+const ctxX = ref(0)
+const ctxY = ref(0)
+const ctxNode = ref<FileTreeNode | null>(null)
+
+const handleContextMenu = (e: MouseEvent, data: FileTreeNode) => {
+  ctxX.value = e.clientX
+  ctxY.value = e.clientY
+  ctxNode.value = data
+  ctxVisible.value = true
+}
+
+const closeCtx = () => { ctxVisible.value = false }
+
+// el-tree 节点点击
+const handleNodeClick = (data: FileTreeNode) => {
+  if (data.type === 'file') handleOpenFile(data)
+}
+
+// 顶部栏/header 触发根目录新建
+const startRootCreate = (type: 'file' | 'dir') => createInDir(null, type)
+
+// 通用新建（parentDir 为 null 时表示根目录）
+const createInDir = async (parentDir: FileTreeNode | null, type: 'file' | 'dir') => {
+  const label = type === 'file' ? '文件名' : '文件夹名'
+  try {
+    const { value: name } = await ElMessageBox.prompt(`请输入${label}`, `新建${type === 'file' ? '文件' : '文件夹'}`, {
+      confirmButtonText: '创建',
+      cancelButtonText: '取消',
+      inputPattern: /^[^\\/\s][^\\/]*$/,
+      inputErrorMessage: '名称不能为空或含有斜杠'
+    })
+    if (!name) return
+    await fileTreeAPI.createNode(projectId, {
+      name,
+      parentPath: parentDir?.path ?? '',
+      type: type === 'dir' ? 'DIRECTORY' : 'FILE'
+    })
+    loadFileTree()
+  } catch (e: any) {
+    if (e === 'cancel') return
+    const msg = e?.response?.data?.message || ''
+    ElMessage.error(msg.includes('已存在') ? `"${e?.response?.data?.message?.split(': ')[1] ?? ''}" 已存在` : '创建失败')
+  }
+}
 
 // 重命名
-const renameValue = ref('')
-const renameTarget = ref<FileTreeNode | null>(null)
-
-const newFileRules: FormRules = {
-  name: [{ required: true, message: '请输入文件名', trigger: 'blur' }]
+const renameNode = async (data: FileTreeNode) => {
+  try {
+    const { value: newName } = await ElMessageBox.prompt('', '重命名', {
+      confirmButtonText: '确认',
+      cancelButtonText: '取消',
+      inputValue: data.name,
+      inputPattern: /^[^\\/\s][^\\/]*$/,
+      inputErrorMessage: '名称不能为空或含有斜杠'
+    })
+    if (!newName || newName === data.name) return
+    await fileTreeAPI.renameNode(projectId, data.path, newName)
+    if (activeFile.value?.id === data.id) {
+      activeFile.value = { ...activeFile.value, name: newName }
+    }
+    loadFileTree()
+  } catch (e: any) {
+    if (e === 'cancel') return
+    ElMessage.error('重命名失败')
+  }
 }
-const newDirRules: FormRules = {
-  name: [{ required: true, message: '请输入目录名', trigger: 'blur' }]
+
+// 删除
+const deleteNode = async (data: FileTreeNode) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除 "${data.name}" 吗？`,
+      '确认删除',
+      { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' }
+    )
+    await fileTreeAPI.deleteNode(projectId, data.path)
+    ElMessage.success('删除成功')
+    if (activeFile.value?.id === data.id) closeFile()
+    loadFileTree()
+  } catch (e: any) {
+    if (e === 'cancel') return
+    ElMessage.error('删除失败')
+  }
 }
 
 // 加载项目信息
@@ -556,103 +624,9 @@ const formatVersionTime = (timeStr: string) => {
   })
 }
 
-// 新建文件（从目录上下文菜单触发）
-const handleNewFileInDir = (node: FileTreeNode) => {
-  newForm.parentPath = node.path
-  showNewFileDialog.value = true
-}
+// 新建文件（从目录行内输入触发）
 
-// 新建目录（从目录上下文菜单触发）
-const handleNewDirInDir = (node: FileTreeNode) => {
-  newForm.parentPath = node.path
-  showNewDirDialog.value = true
-}
 
-// 创建文件
-const handleCreateFile = async () => {
-  if (!newFormRef.value) return
-  try { await newFormRef.value.validate() } catch { return }
-  creating.value = true
-  try {
-    await fileTreeAPI.createNode(projectId, {
-      name: newForm.name,
-      parentPath: newForm.parentPath,
-      type: 'FILE'
-    })
-    ElMessage.success('文件创建成功')
-    showNewFileDialog.value = false
-    loadFileTree()
-  } catch {
-    ElMessage.error('文件创建失败')
-  } finally {
-    creating.value = false
-  }
-}
-
-// 创建目录
-const handleCreateDir = async () => {
-  if (!newDirFormRef.value) return
-  try { await newDirFormRef.value.validate() } catch { return }
-  creating.value = true
-  try {
-    await fileTreeAPI.createNode(projectId, {
-      name: newForm.name,
-      parentPath: newForm.parentPath,
-      type: 'DIRECTORY'
-    })
-    ElMessage.success('目录创建成功')
-    showNewDirDialog.value = false
-    loadFileTree()
-  } catch {
-    ElMessage.error('目录创建失败')
-  } finally {
-    creating.value = false
-  }
-}
-
-// 重命名
-const handleRenameNode = (node: FileTreeNode) => {
-  renameTarget.value = node
-  renameValue.value = node.name
-  showRenameDialog.value = true
-}
-
-const confirmRename = async () => {
-  if (!renameTarget.value || !renameValue.value.trim()) return
-  try {
-    await fileTreeAPI.renameNode(projectId, renameTarget.value.path, renameValue.value.trim())
-    ElMessage.success('重命名成功')
-    showRenameDialog.value = false
-    if (activeFile.value?.id === renameTarget.value.id) {
-      activeFile.value = { ...activeFile.value, name: renameValue.value.trim() }
-    }
-    loadFileTree()
-  } catch {
-    ElMessage.error('重命名失败')
-  }
-}
-
-// 删除节点
-const handleDeleteNode = async (node: FileTreeNode) => {
-  try {
-    await ElMessageBox.confirm(
-      `确定要删除 "${node.name}" 吗？`,
-      '确认删除',
-      { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' }
-    )
-    await fileTreeAPI.deleteNode(projectId, node.path)
-    ElMessage.success('删除成功')
-    if (activeFile.value?.id === node.id) closeFile()
-    loadFileTree()
-  } catch (e: any) {
-    if (e !== 'cancel') ElMessage.error('删除失败')
-  }
-}
-
-const resetNewForm = () => {
-  newForm.name = ''
-  newForm.parentPath = ''
-}
 
 const goBack = () => router.push('/projects')
 
@@ -662,7 +636,7 @@ const startResize = (e: MouseEvent) => {
   const startWidth = sidebarWidth.value
   const onMouseMove = (e: MouseEvent) => {
     const delta = e.clientX - startX
-    sidebarWidth.value = Math.max(160, Math.min(480, startWidth + delta))
+    sidebarWidth.value = Math.max(200, Math.min(560, startWidth + delta))
   }
   const onMouseUp = () => {
     document.removeEventListener('mousemove', onMouseMove)
@@ -679,9 +653,13 @@ onMounted(async () => {
     const res = await projectAPI.getMyRole(projectId)
     myRole.value = res.data.data.role
   } catch (e) {
-    // 获取失败默认当 VIEWER 处理，保守策略
     myRole.value = 'VIEWER'
   }
+  document.addEventListener('click', closeCtx)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeCtx)
 })
 
 </script>
@@ -809,7 +787,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
+  padding: 4px 8px 4px 12px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -817,6 +795,147 @@ onMounted(async () => {
   color: #bbbbbb;
   border-bottom: 1px solid #454545;
   flex-shrink: 0;
+}
+
+.sidebar-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.header-action-icon {
+  font-size: 26px;
+  color: #bbbbbb;
+  padding: 4px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.header-action-icon:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* el-tree 暗色主题覆盖 */
+:deep(.el-tree) {
+  background: transparent;
+  color: #cccccc;
+  font-size: 14px;
+}
+
+:deep(.el-tree-node__content) {
+  height: 34px;
+  border-radius: 3px;
+  padding-right: 4px;
+}
+
+:deep(.el-tree-node__content:hover) {
+  background: #2a2d2e;
+}
+
+:deep(.el-tree-node.is-current > .el-tree-node__content) {
+  background: #094771;
+  color: #ffffff;
+}
+
+:deep(.el-tree-node__expand-icon) {
+  color: #888;
+  font-size: 14px;
+}
+
+:deep(.el-tree-node__expand-icon.is-leaf) {
+  color: transparent;
+}
+
+/* 树节点内容布局 */
+.tree-node-inner {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tree-node-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  color: #c5c5c5;
+}
+
+.tree-node-icon.icon-dir {
+  color: #dcb862;
+}
+
+.tree-node-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* 悬停操作图标 */
+.tree-node-actions {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
+  opacity: 0;
+}
+
+.tree-node-inner:hover .tree-node-actions {
+  opacity: 1;
+}
+
+.tree-node-actions .el-icon {
+  font-size: 22px;
+  padding: 4px;
+  border-radius: 3px;
+  cursor: pointer;
+  color: #c5c5c5;
+}
+
+.tree-node-actions .el-icon:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.12);
+}
+
+.tree-node-actions .el-icon:last-child:hover {
+  color: #f48771;
+  background: rgba(244,135,113,0.15);
+}
+
+/* 右键菜单 */
+.ctx-menu {
+  position: fixed;
+  z-index: 9999;
+  background: #252526;
+  border: 1px solid #454545;
+  border-radius: 5px;
+  padding: 4px 0;
+  min-width: 155px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+}
+
+.ctx-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  font-size: 13px;
+  color: #cccccc;
+  cursor: pointer;
+}
+
+.ctx-item:hover { background: #094771; }
+.ctx-item.danger { color: #f48771; }
+.ctx-item.danger:hover { background: #5a1d1d; }
+
+.ctx-divider {
+  height: 1px;
+  background: #454545;
+  margin: 4px 0;
 }
 
 .sidebar-tree {
