@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Map;
 import java.util.UUID;
 
@@ -191,8 +192,8 @@ public class UserProfileController {
             throw new BaseBusinessException(ErrorCode.INVALID_PARAMETER, "仅支持 JPG、PNG、GIF 格式");
         }
 
-        // 确保目录存在
-        Path uploadPath = Paths.get(avatarUploadDir);
+        // 确保目录存在（转为绝对路径，避免 Tomcat 工作目录问题）
+        Path uploadPath = Paths.get(avatarUploadDir).toAbsolutePath();
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }
@@ -207,8 +208,10 @@ public class UserProfileController {
                 .filter(p -> p.getFileName().toString().startsWith(userId + "_"))
                 .forEach(p -> { try { Files.deleteIfExists(p); } catch (IOException ignored) {} });
 
-        // 保存文件
-        file.transferTo(filePath.toFile());
+        // 保存文件（用 Files.copy + InputStream，避免 transferTo 相对路径问题）
+        try (var inputStream = file.getInputStream()) {
+            Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
+        }
 
         // 更新 DB 中的 avatar_url
         String avatarUrl = "/api/v1/users/avatar/" + filename;
@@ -230,7 +233,7 @@ public class UserProfileController {
             return ResponseEntity.badRequest().build();
         }
 
-        Path filePath = Paths.get(avatarUploadDir).resolve(filename);
+        Path filePath = Paths.get(avatarUploadDir).toAbsolutePath().resolve(filename);
         if (!Files.exists(filePath)) {
             return ResponseEntity.notFound().build();
         }
