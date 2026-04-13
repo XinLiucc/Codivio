@@ -85,14 +85,14 @@
               新建项目
             </el-button>
             
-            <el-button class="action-button" @click="joinProject">
-              <el-icon><Link /></el-icon>
-              加入项目
+            <el-button class="action-button" @click="$router.push('/projects')">
+              <el-icon><Files /></el-icon>
+              项目管理
             </el-button>
-            
-            <el-button class="action-button" @click="uploadFile">
-              <el-icon><Upload /></el-icon>
-              上传文件
+
+            <el-button class="action-button" @click="$router.push('/settings')">
+              <el-icon><Tools /></el-icon>
+              偏好设置
             </el-button>
             
             <el-button class="action-button" @click="$router.push('/profile')">
@@ -166,7 +166,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Sunny, User, SwitchButton, Folder, UserFilled, Document,
-  Lightning, Plus, Link, Upload, Setting, ArrowRight
+  Lightning, Plus, Files, Tools, Setting, ArrowRight
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import { type DashboardData } from '@/api/dashboard'
@@ -265,17 +265,8 @@ const createProject = async () => {
   }
 }
 
-const joinProject = () => {
-  ElMessage.info('加入项目功能开发中...')
-}
-
-const uploadFile = () => {
-  ElMessage.info('上传文件功能开发中...')
-}
-
-// 项目操作
 const openProject = (projectId: string) => {
-  ElMessage.info(`打开项目 ${projectId}（功能开发中）`)
+  router.push(`/projects/${projectId}/files`)
 }
 
 const viewAllProjects = () => {
