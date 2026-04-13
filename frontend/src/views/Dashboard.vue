@@ -169,8 +169,8 @@ import {
   Lightning, Plus, Link, Upload, Setting, ArrowRight
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
-import { mockDashboardData, type DashboardData } from '@/api/dashboard'
-import { projectAPI, type ProjectInfo } from '@/api/project'
+import { type DashboardData } from '@/api/dashboard'
+import { projectAPI } from '@/api/project'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -313,26 +313,24 @@ const loadDashboardData = async () => {
     const userProjects = projectsResponse.data.data
     const stats = statsResponse.data.data
 
-    const mockData = mockDashboardData()
-    mockData.stats.projectCount = stats.projectCount
-    mockData.stats.collaborationCount = stats.collaborationCount
-    mockData.stats.fileCount = stats.fileCount
-    mockData.recentProjects = userProjects.slice(0, 4).map(project => ({
-      id: project.id,
-      name: project.name,
-      description: project.description,
-      language: project.language,
-      members: [],
-      memberCount: 0,
-      updatedAt: project.updatedAt
-    }))
-
-    dashboardData.value = mockData
+    dashboardData.value = {
+      stats: {
+        projectCount: stats.projectCount,
+        collaborationCount: stats.collaborationCount,
+        fileCount: stats.fileCount
+      },
+      recentProjects: userProjects.slice(0, 4).map(project => ({
+        id: project.id,
+        name: project.name,
+        description: project.description,
+        language: project.language,
+        updatedAt: project.updatedAt
+      }))
+    }
 
   } catch (error: any) {
     console.error('加载数据失败:', error)
-    ElMessage.warning('部分数据使用模拟数据显示')
-    dashboardData.value = mockDashboardData()
+    ElMessage.error('加载数据失败，请刷新重试')
   } finally {
     loading.value = false
   }

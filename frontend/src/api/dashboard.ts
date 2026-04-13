@@ -1,27 +1,16 @@
-import http, { ApiResponse } from '@/utils/http'
-
 // Dashboard统计数据类型
 export interface DashboardStats {
-  projectCount: number      // 我的项目数
-  collaborationCount: number // 协作项目数
-  fileCount: number         // 文件总数
+  projectCount: number
+  collaborationCount: number
+  fileCount: number
 }
 
-// 项目成员信息
-export interface ProjectMember {
-  id: number
-  name: string
-  avatar?: string
-}
-
-// 项目信息
+// 项目信息（用于 Dashboard 最近项目列表）
 export interface ProjectInfo {
   id: string
   name: string
   description?: string
   language: string
-  members: ProjectMember[]
-  memberCount: number
   updatedAt: string
 }
 
@@ -29,61 +18,4 @@ export interface ProjectInfo {
 export interface DashboardData {
   stats: DashboardStats
   recentProjects: ProjectInfo[]
-}
-
-/**
- * Dashboard相关API服务
- * 注意：目前后端尚未实现Dashboard相关接口，前端使用模拟数据
- */
-export const dashboardAPI = {
-  // 暂时没有真实的Dashboard API接口，所有功能使用模拟数据
-}
-
-// 生成模拟数据的工具函数（开发阶段使用）
-export const mockDashboardData = (): DashboardData => {
-  return {
-    stats: {
-      projectCount: 3,
-      collaborationCount: 5,
-      fileCount: 24
-    },
-    recentProjects: [
-      {
-        id: '1',
-        name: 'Vue 3 项目模板',
-        description: '基于Vue 3 + TypeScript + Vite的现代化前端项目模板',
-        language: 'Vue',
-        members: [
-          { id: 1, name: 'Alice', avatar: '' },
-          { id: 2, name: 'Bob', avatar: '' }
-        ],
-        memberCount: 2,
-        updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: '2',
-        name: 'API 服务后端',
-        description: 'Spring Boot微服务架构的后端API项目',
-        language: 'Java',
-        members: [
-          { id: 1, name: 'Charlie', avatar: '' }
-        ],
-        memberCount: 1,
-        updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: '3',
-        name: 'React Native App',
-        description: '跨平台移动应用开发项目',
-        language: 'React',
-        members: [
-          { id: 1, name: 'David', avatar: '' },
-          { id: 2, name: 'Emma', avatar: '' },
-          { id: 3, name: 'Frank', avatar: '' }
-        ],
-        memberCount: 3,
-        updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
-      }
-    ]
-  }
 }
