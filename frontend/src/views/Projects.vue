@@ -534,8 +534,8 @@ const handleProjectAction = ({ action, project }: { action: string, project: Pro
 }
 
 // 打开项目
-const openProject = (projectId: number) => {
-  ElMessage.info(`打开项目 ${projectId}（项目详情页面开发中）`)
+const openProject = (projectId: string) => {
+  router.push(`/projects/${projectId}/files`)
 }
 
 // 搜索处理
@@ -554,6 +554,8 @@ onMounted(() => {
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
+  min-height: 100vh;
+  background: var(--app-bg);
 }
 
 .projects-header {
@@ -662,11 +664,11 @@ onMounted(() => {
 
 .project-card {
   padding: 20px;
-  border: 1px solid #ebeef5;
+  border: 1px solid var(--sidebar-border);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
-  background: white;
+  background: var(--sidebar-bg);
 }
 
 .project-card:hover {
