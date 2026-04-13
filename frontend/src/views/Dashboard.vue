@@ -5,21 +5,11 @@
       <div class="welcome-section">
         <h1>
           <el-icon><Sunny /></el-icon>
-          {{ getGreeting() }}，{{ userDisplayName }}
+          {{ getGreeting() }}
         </h1>
         <p class="welcome-text">欢迎回到 Codivio 代码协作平台</p>
       </div>
       
-      <div class="user-actions">
-        <el-button @click="$router.push('/profile')">
-          <el-icon><User /></el-icon>
-          个人中心
-        </el-button>
-        <el-button type="danger" @click="handleLogout">
-          <el-icon><SwitchButton /></el-icon>
-          退出登录
-        </el-button>
-      </div>
     </div>
 
     <!-- 统计数据卡片 -->
@@ -165,19 +155,13 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  Sunny, User, SwitchButton, Folder, UserFilled, Document,
+  Sunny, Folder, UserFilled, Document,
   Lightning, Plus, Files, Tools, Setting, ArrowRight
 } from '@element-plus/icons-vue'
-import { useAuthStore } from '@/stores/auth'
 import { type DashboardData } from '@/api/dashboard'
 import { projectAPI } from '@/api/project'
 
 const router = useRouter()
-const authStore = useAuthStore()
-
-// 用户信息
-const userDisplayName = computed(() => authStore.userDisplayName)
-
 // 加载状态
 const loading = ref(false)
 
@@ -274,24 +258,6 @@ const viewAllProjects = () => {
 }
 
 // 退出登录
-const handleLogout = async () => {
-  try {
-    await ElMessageBox.confirm(
-      '确定要退出登录吗？',
-      '退出确认',
-      {
-        type: 'warning',
-        confirmButtonText: '确定',
-        cancelButtonText: '取消'
-      }
-    )
-    
-    await authStore.logout()
-  } catch (error) {
-    // 用户取消操作
-  }
-}
-
 // 加载数据
 const loadDashboardData = async () => {
   loading.value = true
