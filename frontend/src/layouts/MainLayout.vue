@@ -103,15 +103,15 @@ const handleLogout = async () => {
 .main-layout {
   display: flex;
   height: 100vh;
-  background: #f5f7fa;
+  background: var(--app-bg);
 }
 
 /* 侧边栏 */
 .sidebar {
   width: 220px;
   flex-shrink: 0;
-  background: #fff;
-  border-right: 1px solid #e8eaed;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -119,6 +119,7 @@ const handleLogout = async () => {
   left: 0;
   top: 0;
   z-index: 100;
+  transition: background 0.2s, border-color 0.2s;
 }
 
 /* Logo */
@@ -127,13 +128,13 @@ const handleLogout = async () => {
   align-items: center;
   gap: 10px;
   padding: 20px 20px 16px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--sidebar-logo-border);
 }
 
 .logo-text {
   font-size: 18px;
   font-weight: 700;
-  color: #1a1a2e;
+  color: var(--logo-text-color);
   letter-spacing: 0.3px;
 }
 
@@ -153,7 +154,7 @@ const handleLogout = async () => {
   gap: 10px;
   padding: 10px 12px;
   border-radius: 8px;
-  color: #606266;
+  color: var(--nav-text);
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
@@ -162,17 +163,17 @@ const handleLogout = async () => {
 }
 
 .nav-item:hover {
-  background: #f0f6ff;
-  color: #409eff;
+  background: var(--nav-hover-bg);
+  color: var(--nav-active-text);
 }
 
 .nav-item.active {
-  background: #ecf5ff;
-  color: #409eff;
+  background: var(--nav-active-bg);
+  color: var(--nav-active-text);
 }
 
 .nav-item.active .nav-icon {
-  color: #409eff;
+  color: var(--nav-active-text);
 }
 
 .nav-icon {
@@ -187,7 +188,7 @@ const handleLogout = async () => {
 /* 底部用户区 */
 .sidebar-footer {
   padding: 12px 14px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--sidebar-footer-border);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -222,7 +223,7 @@ const handleLogout = async () => {
 .user-name {
   font-size: 13px;
   font-weight: 600;
-  color: #303133;
+  color: var(--user-name-color);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -230,7 +231,7 @@ const handleLogout = async () => {
 
 .user-role {
   font-size: 11px;
-  color: #909399;
+  color: var(--user-role-color);
 }
 
 .logout-btn {
@@ -260,5 +261,7 @@ const handleLogout = async () => {
   flex: 1;
   min-height: 100vh;
   overflow-y: auto;
+  background: var(--app-bg);
+  transition: background 0.2s;
 }
 </style>

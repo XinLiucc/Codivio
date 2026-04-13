@@ -266,7 +266,7 @@ onMounted(() => {
 <style scoped>
 .dashboard {
   padding: 24px;
-  background-color: #f5f7fa;
+  background-color: var(--app-bg);
   min-height: calc(100vh - 48px);
 }
 
@@ -276,7 +276,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
-  background: white;
+  background: var(--sidebar-bg);
   padding: 24px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -389,11 +389,11 @@ onMounted(() => {
 
 .project-card {
   padding: 16px;
-  border: 1px solid #ebeef5;
+  border: 1px solid var(--sidebar-border);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
-  background: white;
+  background: var(--sidebar-bg);
 }
 
 .project-card:hover {
