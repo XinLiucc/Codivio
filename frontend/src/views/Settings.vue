@@ -27,7 +27,7 @@
               <span>安全与隐私</span>
             </el-menu-item>
             <el-menu-item index="language">
-              <el-icon><Translation /></el-icon>
+              <el-icon><Reading /></el-icon>
               <span>语言与区域</span>
             </el-menu-item>
           </el-menu>
@@ -177,7 +177,7 @@
           <template #header>
             <div class="card-header">
               <span>语言与区域</span>
-              <el-icon><Translation /></el-icon>
+              <el-icon><Reading /></el-icon>
             </div>
           </template>
 
@@ -231,7 +231,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElNotification } from 'element-plus'
 import {
-  Monitor, Bell, Lock, Translation, Sunny, Moon,
+  Monitor, Bell, Lock, Reading, Sunny, Moon,
   Connection, Download
 } from '@element-plus/icons-vue'
 

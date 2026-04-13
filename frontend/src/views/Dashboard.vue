@@ -148,21 +148,6 @@
               </div>
               
               <div class="project-footer">
-                <div class="project-members">
-                  <div class="avatar-group">
-                    <el-avatar
-                      v-for="(member, index) in project.members.slice(0, 3)"
-                      :key="member.id"
-                      :src="member.avatar"
-                      :title="member.name"
-                      size="small"
-                      :style="{ zIndex: 3 - index }"
-                    >
-                      {{ member.name.charAt(0) }}
-                    </el-avatar>
-                  </div>
-                </div>
-                
                 <div class="project-time">
                   {{ formatTime(project.updatedAt) }}
                 </div>
@@ -289,7 +274,7 @@ const uploadFile = () => {
 }
 
 // 项目操作
-const openProject = (projectId: number) => {
+const openProject = (projectId: string) => {
   ElMessage.info(`打开项目 ${projectId}（功能开发中）`)
 }
 
@@ -338,6 +323,7 @@ const loadDashboardData = async () => {
       description: project.description,
       language: project.language,
       members: [],
+      memberCount: 0,
       updatedAt: project.updatedAt
     }))
 

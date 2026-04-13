@@ -253,11 +253,9 @@ const editMemberRules: FormRules = {
   ]
 }
 
-// 权限检查 - 简化版，实际应该检查当前用户在项目中的角色
-const canManageMembers = computed(() => {
-  // TODO: 实现真正的权限检查
-  return true
-})
+// 当前用户角色
+const myRole = ref<string>('')
+const canManageMembers = computed(() => myRole.value === 'OWNER')
 
 // 获取角色标签类型
 const getRoleTagType = (role: string) => {
@@ -455,9 +453,15 @@ const goBack = () => {
 }
 
 // 组件挂载时加载数据
-onMounted(() => {
+onMounted(async () => {
   loadProjectInfo()
   loadMembers()
+  try {
+    const res = await projectAPI.getMyRole(projectId.value)
+    myRole.value = res.data.data.role
+  } catch (e) {
+    myRole.value = ''
+  }
 })
 </script>
 

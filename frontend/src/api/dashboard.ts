@@ -16,7 +16,7 @@ export interface ProjectMember {
 
 // 项目信息
 export interface ProjectInfo {
-  id: number
+  id: string
   name: string
   description?: string
   language: string
@@ -49,7 +49,7 @@ export const mockDashboardData = (): DashboardData => {
     },
     recentProjects: [
       {
-        id: 1,
+        id: '1',
         name: 'Vue 3 项目模板',
         description: '基于Vue 3 + TypeScript + Vite的现代化前端项目模板',
         language: 'Vue',
@@ -61,7 +61,7 @@ export const mockDashboardData = (): DashboardData => {
         updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
       },
       {
-        id: 2,
+        id: '2',
         name: 'API 服务后端',
         description: 'Spring Boot微服务架构的后端API项目',
         language: 'Java',
@@ -72,7 +72,7 @@ export const mockDashboardData = (): DashboardData => {
         updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
       },
       {
-        id: 3,
+        id: '3',
         name: 'React Native App',
         description: '跨平台移动应用开发项目',
         language: 'React',

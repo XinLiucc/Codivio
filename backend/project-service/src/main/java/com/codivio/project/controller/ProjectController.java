@@ -218,8 +218,8 @@ public class ProjectController {
             throw new BaseBusinessException(ErrorCode.UNAUTHORIZED);
         }
         
-        // 1. 权限验证：检查operatorId是否为项目owner
-        if(!projectService.isProjectOwner(projectId, operatorId)) {
+        // 1. 权限验证：是项目成员即可查看
+        if(!projectMemberRepository.existsByProjectIdAndUserId(projectId, operatorId)) {
             throw new BaseBusinessException(ErrorCode.PROJECT_ACCESS_DENIED);
         }
 
