@@ -215,10 +215,10 @@ const setupYjs = () => {
   yjsDoc = new Y.Doc()
   const yText = yjsDoc.getText('monaco')
 
-  // y-websocket 会把 serverUrl + '/' + roomname 拼成最终 URL
-  // 结果：ws://localhost:8080/collaboration/ws/{projectId}/{fileId}?token=xxx
+  // 动态读取当前 host，经 nginx 代理到 collaboration-service
+  const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
   yjsProvider = new WebsocketProvider(
-    `ws://localhost:8080/collaboration/ws/${props.projectId}`,
+    `${wsProtocol}//${location.host}/collaboration/ws/${props.projectId}`,
     props.fileId!,
     yjsDoc,
     { params: { token } }
