@@ -31,7 +31,7 @@ RUN mkdir -p /app/files
 
 # 添加健康检查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD curl -f http://localhost:8084/actuator/health || exit 1
+  CMD curl -f http://localhost:8084/api/v1/files/health || exit 1
 
 # JVM优化参数和Docker兼容性参数
 ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC -Djdk.internal.platform.cgroupv1.useSystemdMemoryController=false"
