@@ -77,16 +77,11 @@
       <el-col :span="8">
         <el-card title="快捷操作">
           <div class="quick-actions">
-            <el-button type="primary" @click="$router.push('/dashboard')">
-              <el-icon><House /></el-icon>
-              返回仪表板
-            </el-button>
-            
             <el-button @click="showPasswordDialog = true">
               <el-icon><Lock /></el-icon>
               修改密码
             </el-button>
-            
+
             <el-button type="danger" @click="handleLogout">
               <el-icon><SwitchButton /></el-icon>
               退出登录
@@ -152,7 +147,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
-import { UserFilled, House, Lock, SwitchButton } from '@element-plus/icons-vue'
+import { UserFilled, Lock, SwitchButton } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import { authAPI, type UpdateProfileForm, type ChangePasswordForm } from '@/api/auth'
 import AvatarUpload from '@/components/AvatarUpload.vue'
@@ -357,7 +352,9 @@ const changePassword = async () => {
 // 头像上传成功处理
 const handleAvatarSuccess = (avatarUrl: string) => {
   profileForm.avatarUrl = avatarUrl
-  ElMessage.success('头像上传成功')
+  originalProfile.avatarUrl = avatarUrl
+  // 同步更新 store，使侧边栏等处也能拿到最新头像
+  authStore.updateUser({ avatarUrl })
 }
 
 // 头像上传失败处理
@@ -398,16 +395,14 @@ const formatDate = (dateStr?: string) => {
   })
 }
 
-// 组件挂载时初始化
-onMounted(() => {
-  if (!user.value) {
-    // 如果没有用户信息，尝试获取
-    authStore.fetchCurrentUser().catch(() => {
-      ElMessage.error('获取用户信息失败')
-      router.push('/login')
-    })
-  } else {
+// 组件挂载时初始化（每次都从服务器拉最新数据，确保头像等更新能显示）
+onMounted(async () => {
+  try {
+    await authStore.fetchCurrentUser()
     initProfile()
+  } catch {
+    ElMessage.error('获取用户信息失败')
+    router.push('/login')
   }
 })
 </script>
@@ -417,6 +412,8 @@ onMounted(() => {
   padding: 24px;
   max-width: 1200px;
   margin: 0 auto;
+  min-height: 100vh;
+  background: var(--app-bg);
 }
 
 .profile-header {
@@ -467,7 +464,10 @@ onMounted(() => {
 }
 
 .quick-actions .el-button {
+  display: flex;
   justify-content: flex-start;
+  width: 100%;
+  margin-left: 0 !important;
 }
 
 .stats-card {

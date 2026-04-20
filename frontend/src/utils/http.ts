@@ -14,7 +14,7 @@ interface ApiResponse<T = any> {
 // 创建axios实例
 const http = axios.create({
   // 基础URL - 开发环境使用相对路径，生产环境使用完整URL
-  baseURL: import.meta.env.DEV ? '/api/v1' : 'http://localhost:8080/api/v1',
+  baseURL: '/api/v1',
   // 请求超时时间（10秒）
   timeout: 10000,
   // 默认请求头

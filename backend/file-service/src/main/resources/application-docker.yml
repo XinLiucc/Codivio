@@ -1,5 +1,13 @@
 # Docker环境配置
 spring:
+  # RabbitMQ配置 - Docker环境
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: codivio
+    password: codivio123
+    virtual-host: /
+
   # 完全禁用Spring Boot Actuator的系统指标
   autoconfigure:
     exclude: 

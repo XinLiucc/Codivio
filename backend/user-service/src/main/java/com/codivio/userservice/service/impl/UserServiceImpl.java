@@ -4,7 +4,10 @@ import com.codivio.userservice.dto.LoginResponseDTO;
 import com.codivio.userservice.dto.UserLoginDTO;
 import com.codivio.userservice.dto.UserRegisterDTO;
 import com.codivio.userservice.dto.UserUpdateDTO;
+import com.codivio.userservice.dto.UserValidationDTO;
 import com.codivio.userservice.entity.User;
+import java.util.List;
+import java.util.stream.Collectors;
 import com.codivio.userservice.exception.BaseBusinessException;
 import com.codivio.userservice.exception.ErrorCode;
 import com.codivio.userservice.repository.UserRepository;
@@ -245,5 +248,16 @@ public class UserServiceImpl implements UserService {
         
         Optional<User> userOptional = userRepository.findByUsername(username.trim());
         return userOptional.orElse(null);
+    }
+
+    @Override
+    public List<UserValidationDTO> searchUsers(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return List.of();
+        }
+        List<User> users = userRepository.searchTop10ByKeyword(keyword.trim());
+        return users.stream()
+                .map(u -> UserValidationDTO.exists(u.getId(), u.getUsername(), u.getEmail()))
+                .collect(Collectors.toList());
     }
 }

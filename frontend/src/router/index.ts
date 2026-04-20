@@ -17,90 +17,71 @@ const routes: RouteRecordRaw[] = [
     path: '/',
     name: 'Home',
     component: () => import('@/views/Home.vue'),
-    meta: {
-      title: 'Codivio - 代码协作平台'
-    }
+    meta: { title: 'Codivio - 代码协作平台' }
   },
   {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/Login.vue'),
-    meta: {
-      title: '登录 - Codivio',
-      hideInMenu: true
-    }
+    meta: { title: '登录 - Codivio' }
   },
   {
     path: '/register',
     name: 'Register',
     component: () => import('@/views/Register.vue'),
-    meta: {
-      title: '注册 - Codivio',
-      hideInMenu: true
-    }
+    meta: { title: '注册 - Codivio' }
   },
-  {
-    path: '/dashboard',
-    name: 'Dashboard',
-    component: () => import('@/views/Dashboard.vue'),
-    meta: {
-      requiresAuth: true,
-      title: '仪表板 - Codivio'
-    }
-  },
-  {
-    path: '/profile',
-    name: 'Profile',
-    component: () => import('@/views/Profile.vue'),
-    meta: {
-      requiresAuth: true,
-      title: '个人中心 - Codivio'
-    }
-  },
-  {
-    path: '/settings',
-    name: 'Settings',
-    component: () => import('@/views/Settings.vue'),
-    meta: {
-      requiresAuth: true,
-      title: '账户设置 - Codivio'
-    }
-  },
-  {
-    path: '/projects',
-    name: 'Projects',
-    component: () => import('@/views/Projects.vue'), 
-    meta: {
-      requiresAuth: true,
-      title: '我的项目 - Codivio'
-    }
-  },
-  {
-    path: '/projects/:projectId/members',
-    name: 'ProjectMembers',
-    component: () => import('@/views/ProjectMembers.vue'),
-    meta: {
-      requiresAuth: true,
-      title: '项目成员管理 - Codivio'
-    }
-  },
+  // 全屏页面（不带侧边栏）
   {
     path: '/projects/:projectId/files',
     name: 'ProjectFiles',
     component: () => import('@/views/ProjectFiles.vue'),
-    meta: {
-      requiresAuth: true,
-      title: '项目文件管理 - Codivio'
-    }
+    meta: { requiresAuth: true, title: '项目编辑器 - Codivio' }
+  },
+  // 带侧边栏的主布局
+  {
+    path: '/',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: 'dashboard',
+        name: 'Dashboard',
+        component: () => import('@/views/Dashboard.vue'),
+        meta: { requiresAuth: true, title: '仪表盘 - Codivio' }
+      },
+      {
+        path: 'projects',
+        name: 'Projects',
+        component: () => import('@/views/Projects.vue'),
+        meta: { requiresAuth: true, title: '项目管理 - Codivio' }
+      },
+      {
+        path: 'projects/:projectId/members',
+        name: 'ProjectMembers',
+        component: () => import('@/views/ProjectMembers.vue'),
+        meta: { requiresAuth: true, title: '成员管理 - Codivio' }
+      },
+      {
+        path: 'profile',
+        name: 'Profile',
+        component: () => import('@/views/Profile.vue'),
+        meta: { requiresAuth: true, title: '个人信息 - Codivio' }
+      },
+      {
+        path: 'settings',
+        name: 'Settings',
+        component: () => import('@/views/Settings.vue'),
+        meta: { requiresAuth: true, title: '偏好设置 - Codivio' }
+      },
+    ]
   },
   // 404页面
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/NotFound.vue'),
-    meta: {
-      title: '页面不存在 - Codivio'
-    }
+    meta: { title: '页面不存在 - Codivio' }
   }
 ]
 

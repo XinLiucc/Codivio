@@ -20,6 +20,12 @@ spring:
       connection-timeout: 20000
       max-lifetime: 1200000
   
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 2MB
+
   # JPA配置
   jpa:
     hibernate:
@@ -34,6 +40,11 @@ jwt:
   secret: codivio-jwt-secret-key-2025-very-long-and-secure-string
   expiration: 86400  # 24小时（秒）
   issuer: codivio-user-service
+
+# 头像存储路径
+avatar:
+  upload:
+    dir: ./data/avatars
 
 # 日志配置
 logging:

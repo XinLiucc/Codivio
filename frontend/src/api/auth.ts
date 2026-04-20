@@ -93,10 +93,10 @@ export const authAPI = {
 
   /**
    * 获取当前用户信息
-   * 对应后端接口: GET /api/v1/users/me
+   * 对应后端接口: GET /api/v1/users/profile
    */
   getCurrentUser: () => {
-    return http.get<ApiResponse<UserInfo>>('/users/me')
+    return http.get<ApiResponse<UserInfo>>('/users/profile')
   },
 
   /**

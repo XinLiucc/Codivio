@@ -1,23 +1,25 @@
-version: '3.8'
-
 services:
-  # MySQL 数据库
+  # ───── 基础设施 ─────
   mysql:
     image: mysql:8.0
     container_name: codivio-mysql
     environment:
       MYSQL_ROOT_PASSWORD: codivio123
-      # 注意：初始化脚本会创建多个数据库，这里不指定MYSQL_DATABASE
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./docker/mysql/init:/docker-entrypoint-initdb.d
     command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pcodivio123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - codivio-network
 
-  # Redis 缓存
   redis:
     image: redis:7-alpine
     container_name: codivio-redis
@@ -26,10 +28,14 @@ services:
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     networks:
       - codivio-network
 
-  # RabbitMQ 消息队列
   rabbitmq:
     image: rabbitmq:3-management
     container_name: codivio-rabbitmq
@@ -41,27 +47,90 @@ services:
       - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - codivio-network
 
-  # 用户服务
+  # ───── 后端服务 ─────
   user-service:
-    build: 
+    build:
       context: ./backend/user-service
       dockerfile: Dockerfile
     container_name: codivio-user-service
     ports:
       - "8081:8081"
     depends_on:
-      - mysql
-    networks:
-      - codivio-network
+      mysql:
+        condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - codivio-network
 
-  # 网关服务
+  project-service:
+    build:
+      context: ./backend/project-service
+      dockerfile: Dockerfile
+    container_name: codivio-project-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - codivio-network
+
+  collaboration-service:
+    build:
+      context: ./backend/collaboration-service
+      dockerfile: Dockerfile
+    container_name: codivio-collaboration-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      redis:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - codivio-network
+
+  file-service:
+    build:
+      context: ./backend/file-service
+      dockerfile: Dockerfile
+    container_name: codivio-file-service
+    ports:
+      - "8084:8084"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    volumes:
+      - ./data/files:/app/files
+    networks:
+      - codivio-network
+
   gateway-service:
-    build: 
+    build:
       context: ./backend/gateway-service
       dockerfile: Dockerfile
     container_name: codivio-gateway-service
@@ -74,88 +143,21 @@ services:
         condition: service_healthy
       file-service:
         condition: service_healthy
-    networks:
-      - codivio-network
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-
-  # 项目服务
-  project-service:
-    build: 
-      context: ./backend/project-service
-      dockerfile: Dockerfile
-    container_name: codivio-project-service
-    ports:
-      - "8082:8082"
-    depends_on:
-      mysql:
-        condition: service_started
-      user-service:
+      collaboration-service:
         condition: service_healthy
-    networks:
-      - codivio-network
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-
-  # 协作服务
-  collaboration-service:
-    build: 
-      context: ./backend/collaboration-service
-      dockerfile: Dockerfile
-    container_name: codivio-collaboration-service
-    ports:
-      - "8083:8083"
-    depends_on:
-      - mysql
-      - redis
-      - rabbitmq
     networks:
       - codivio-network
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
 
-  # 文件服务
-  file-service:
-    build: 
-      context: ./backend/file-service
-      dockerfile: Dockerfile
-    container_name: codivio-file-service
-    ports:
-      - "8084:8084"
-    depends_on:
-      mysql:
-        condition: service_started
-      user-service:
-        condition: service_healthy
-    networks:
-      - codivio-network
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-    volumes:
-      - ./data/files:/app/files
-
-  # 前端服务
+  # ───── 前端 ─────
   frontend:
-    build: 
+    build:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: codivio-frontend
     ports:
-      - "8090:80"
-    depends_on:
-      - gateway-service
-    networks:
-      - codivio-network
-
-  # Nginx 负载均衡
-  nginx:
-    image: nginx:alpine
-    container_name: codivio-nginx
-    ports:
-      - "443:443"
-    volumes:
-      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+      - "80:80"
     depends_on:
       - gateway-service
     networks:

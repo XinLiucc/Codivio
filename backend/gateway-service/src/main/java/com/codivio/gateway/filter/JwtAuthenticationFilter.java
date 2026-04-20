@@ -38,6 +38,7 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             "/api/v1/auth/register",     // 用户注册
             "/api/v1/auth/login",        // 用户登录
             "/api/v1/auth/check-username", // 检查用户名
+            "/api/v1/users/avatar/",     // 头像静态资源（浏览器img请求不带token）
             "/actuator/health"           // 健康检查
     );
 

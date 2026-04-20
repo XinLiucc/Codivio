@@ -14,7 +14,7 @@ RUN npm install
 COPY . .
 
 # 构建项目
-RUN npm run build
+RUN npx vite build
 
 # 生产阶段
 FROM nginx:stable-alpine as production-stage

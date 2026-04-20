@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -58,4 +59,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return 用户数量
      */
     long countByStatus(Integer status);
+
+    /**
+     * 根据用户名或邮箱模糊搜索（不区分大小写），最多返回10条
+     */
+    @Query("SELECT u FROM User u WHERE u.username LIKE %:keyword% OR u.email LIKE %:keyword%")
+    List<User> searchTop10ByKeyword(@Param("keyword") String keyword);
 }

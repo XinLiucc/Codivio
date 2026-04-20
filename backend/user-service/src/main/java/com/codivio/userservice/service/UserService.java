@@ -4,7 +4,9 @@ import com.codivio.userservice.dto.LoginResponseDTO;
 import com.codivio.userservice.dto.UserLoginDTO;
 import com.codivio.userservice.dto.UserRegisterDTO;
 import com.codivio.userservice.dto.UserUpdateDTO;
+import com.codivio.userservice.dto.UserValidationDTO;
 import com.codivio.userservice.entity.User;
+import java.util.List;
 
 /**
  * 用户服务接口
@@ -117,4 +119,12 @@ public interface UserService {
      * @return 用户信息，不存在时返回null
      */
     User findByUsername(String username);
+
+    /**
+     * 根据用户名关键字模糊搜索用户（最多10条）
+     *
+     * @param keyword 搜索关键字
+     * @return 匹配的用户列表
+     */
+    List<UserValidationDTO> searchUsers(String keyword);
 }

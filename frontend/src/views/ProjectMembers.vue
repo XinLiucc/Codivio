@@ -38,7 +38,14 @@
 
         <div v-else class="members-table">
           <el-table :data="members" stripe>
-            <el-table-column prop="userId" label="用户ID" width="100" />
+            <el-table-column label="用户" min-width="160">
+              <template #default="{ row }">
+                <div>
+                  <div style="font-weight: 500;">{{ row.username || '—' }}</div>
+                  <div style="font-size: 12px; color: #909399;">{{ row.email || `ID: ${row.userId}` }}</div>
+                </div>
+              </template>
+            </el-table-column>
             
             <el-table-column prop="role" label="角色" width="120">
               <template #default="{ row }">
@@ -81,16 +88,34 @@
     </el-card>
 
     <!-- 添加成员对话框 -->
-    <el-dialog v-model="showAddMemberDialog" title="添加项目成员" width="500px">
+    <el-dialog v-model="showAddMemberDialog" title="添加项目成员" width="500px" @closed="resetAddForm">
       <el-form
         ref="addMemberFormRef"
         :model="addMemberForm"
         :rules="addMemberRules"
         label-width="80px"
       >
-        <el-form-item label="用户ID" prop="userId">
-          <el-input v-model="addMemberForm.userId" placeholder="请输入用户ID" type="number" />
-          <div class="form-tip">暂时需要输入用户ID，后续会改为用户名搜索</div>
+        <el-form-item label="搜索用户" prop="userId">
+          <el-select
+            v-model="addMemberForm.userId"
+            filterable
+            remote
+            :remote-method="handleUserSearch"
+            :loading="userSearchLoading"
+            placeholder="输入用户名或邮箱搜索"
+            style="width: 100%"
+            @change="handleUserSelect"
+          >
+            <el-option
+              v-for="user in userSearchOptions"
+              :key="user.userId"
+              :value="user.userId"
+              :label="user.username"
+            >
+              <span>{{ user.username }}</span>
+              <span style="float: right; font-size: 12px; color: #909399;">{{ user.email }}</span>
+            </el-option>
+          </el-select>
         </el-form-item>
         
         <el-form-item label="角色" prop="role">
@@ -147,6 +172,7 @@ import {
   ArrowLeft, Plus
 } from '@element-plus/icons-vue'
 import { projectAPI, type ProjectInfo, type ProjectMember } from '@/api/project'
+import { userAPI, type UserSearchResult } from '@/api/user'
 
 const router = useRouter()
 const route = useRoute()
@@ -171,9 +197,34 @@ const showEditMemberDialog = ref(false)
 const addMemberFormRef = ref<FormInstance>()
 const editMemberFormRef = ref<FormInstance>()
 
+// 用户搜索
+const userSearchLoading = ref(false)
+const userSearchOptions = ref<UserSearchResult[]>([])
+const selectedUser = ref<UserSearchResult | null>(null)
+
+const handleUserSearch = async (keyword: string) => {
+  if (!keyword || keyword.trim().length < 1) {
+    userSearchOptions.value = []
+    return
+  }
+  userSearchLoading.value = true
+  try {
+    const response = await userAPI.searchUsers(keyword.trim())
+    userSearchOptions.value = response.data.data || []
+  } catch (e) {
+    userSearchOptions.value = []
+  } finally {
+    userSearchLoading.value = false
+  }
+}
+
+const handleUserSelect = (userId: number) => {
+  selectedUser.value = userSearchOptions.value.find(u => u.userId === userId) || null
+}
+
 // 添加成员表单
 const addMemberForm = reactive({
-  userId: '',
+  userId: null as number | null,
   role: 'VIEWER'
 })
 
@@ -189,7 +240,7 @@ const currentEditMember = ref<ProjectMember | null>(null)
 // 表单验证规则
 const addMemberRules: FormRules = {
   userId: [
-    { required: true, message: '请输入用户ID', trigger: 'blur' }
+    { required: true, message: '请搜索并选择用户', trigger: 'change' }
   ],
   role: [
     { required: true, message: '请选择角色', trigger: 'change' }
@@ -202,11 +253,9 @@ const editMemberRules: FormRules = {
   ]
 }
 
-// 权限检查 - 简化版，实际应该检查当前用户在项目中的角色
-const canManageMembers = computed(() => {
-  // TODO: 实现真正的权限检查
-  return true
-})
+// 当前用户角色
+const myRole = ref<string>('')
+const canManageMembers = computed(() => myRole.value === 'OWNER')
 
 // 获取角色标签类型
 const getRoleTagType = (role: string) => {
@@ -293,7 +342,7 @@ const handleAddMember = async () => {
   
   try {
     await projectAPI.addProjectMember(projectId.value, {
-      userId: parseInt(addMemberForm.userId),
+      userId: addMemberForm.userId!,
       role: addMemberForm.role
     })
     
@@ -302,9 +351,11 @@ const handleAddMember = async () => {
     
     // 重置表单
     Object.assign(addMemberForm, {
-      userId: '',
+      userId: null,
       role: 'VIEWER'
     })
+    selectedUser.value = null
+    userSearchOptions.value = []
     
     // 重新加载成员列表
     loadMembers()
@@ -364,7 +415,7 @@ const handleUpdateMember = async () => {
 const handleRemoveMember = async (member: ProjectMember) => {
   try {
     await ElMessageBox.confirm(
-      `确定要从项目中移除用户 ${member.userId} 吗？`,
+      `确定要从项目中移除用户 ${member.username || member.userId} 吗？`,
       '确认移除',
       {
         confirmButtonText: '确定',
@@ -388,15 +439,29 @@ const handleRemoveMember = async (member: ProjectMember) => {
   }
 }
 
+// 重置添加成员对话框状态
+const resetAddForm = () => {
+  Object.assign(addMemberForm, { userId: null, role: 'VIEWER' })
+  selectedUser.value = null
+  userSearchOptions.value = []
+  addMemberFormRef.value?.resetFields()
+}
+
 // 返回上一页
 const goBack = () => {
   router.push('/projects')
 }
 
 // 组件挂载时加载数据
-onMounted(() => {
+onMounted(async () => {
   loadProjectInfo()
   loadMembers()
+  try {
+    const res = await projectAPI.getMyRole(projectId.value)
+    myRole.value = res.data.data.role
+  } catch (e) {
+    myRole.value = ''
+  }
 })
 </script>
 
@@ -466,9 +531,4 @@ onMounted(() => {
   font-size: 12px;
 }
 
-.form-tip {
-  color: #909399;
-  font-size: 12px;
-  margin-top: 4px;
-}
 </style>

@@ -5,21 +5,11 @@
       <div class="welcome-section">
         <h1>
           <el-icon><Sunny /></el-icon>
-          {{ getGreeting() }}，{{ userDisplayName }}
+          {{ getGreeting() }}
         </h1>
         <p class="welcome-text">欢迎回到 Codivio 代码协作平台</p>
       </div>
       
-      <div class="user-actions">
-        <el-button @click="$router.push('/profile')">
-          <el-icon><User /></el-icon>
-          个人中心
-        </el-button>
-        <el-button type="danger" @click="handleLogout">
-          <el-icon><SwitchButton /></el-icon>
-          退出登录
-        </el-button>
-      </div>
     </div>
 
     <!-- 统计数据卡片 -->
@@ -69,43 +59,8 @@
 
     <!-- 快捷操作和项目列表 -->
     <el-row :gutter="24" class="content-row">
-      <!-- 快捷操作 -->
-      <el-col :span="6">
-        <el-card title="快捷操作">
-          <template #header>
-            <div class="card-header">
-              <span>快捷操作</span>
-              <el-icon><Lightning /></el-icon>
-            </div>
-          </template>
-          
-          <div class="quick-actions">
-            <el-button type="primary" class="action-button" @click="createProject">
-              <el-icon><Plus /></el-icon>
-              新建项目
-            </el-button>
-            
-            <el-button class="action-button" @click="joinProject">
-              <el-icon><Link /></el-icon>
-              加入项目
-            </el-button>
-            
-            <el-button class="action-button" @click="uploadFile">
-              <el-icon><Upload /></el-icon>
-              上传文件
-            </el-button>
-            
-            <el-button class="action-button" @click="$router.push('/profile')">
-              <el-icon><Setting /></el-icon>
-              账户设置
-            </el-button>
-            
-          </div>
-        </el-card>
-      </el-col>
-
       <!-- 项目列表 -->
-      <el-col :span="18">
+      <el-col :span="24">
         <el-card>
           <template #header>
             <div class="card-header">
@@ -148,21 +103,6 @@
               </div>
               
               <div class="project-footer">
-                <div class="project-members">
-                  <div class="avatar-group">
-                    <el-avatar
-                      v-for="(member, index) in project.members.slice(0, 3)"
-                      :key="member.id"
-                      :src="member.avatar"
-                      :title="member.name"
-                      size="small"
-                      :style="{ zIndex: 3 - index }"
-                    >
-                      {{ member.name.charAt(0) }}
-                    </el-avatar>
-                  </div>
-                </div>
-                
                 <div class="project-time">
                   {{ formatTime(project.updatedAt) }}
                 </div>
@@ -180,19 +120,12 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  Sunny, User, SwitchButton, Folder, UserFilled, Document,
-  Lightning, Plus, Link, Upload, Setting, ArrowRight
+  Sunny, Folder, UserFilled, Document, Plus, ArrowRight
 } from '@element-plus/icons-vue'
-import { useAuthStore } from '@/stores/auth'
-import { mockDashboardData, type DashboardData } from '@/api/dashboard'
-import { projectAPI, type ProjectInfo } from '@/api/project'
+import { type DashboardData } from '@/api/dashboard'
+import { projectAPI } from '@/api/project'
 
 const router = useRouter()
-const authStore = useAuthStore()
-
-// 用户信息
-const userDisplayName = computed(() => authStore.userDisplayName)
-
 // 加载状态
 const loading = ref(false)
 
@@ -280,17 +213,8 @@ const createProject = async () => {
   }
 }
 
-const joinProject = () => {
-  ElMessage.info('加入项目功能开发中...')
-}
-
-const uploadFile = () => {
-  ElMessage.info('上传文件功能开发中...')
-}
-
-// 项目操作
-const openProject = (projectId: number) => {
-  ElMessage.info(`打开项目 ${projectId}（功能开发中）`)
+const openProject = (projectId: string) => {
+  router.push(`/projects/${projectId}/files`)
 }
 
 const viewAllProjects = () => {
@@ -298,56 +222,36 @@ const viewAllProjects = () => {
 }
 
 // 退出登录
-const handleLogout = async () => {
-  try {
-    await ElMessageBox.confirm(
-      '确定要退出登录吗？',
-      '退出确认',
-      {
-        type: 'warning',
-        confirmButtonText: '确定',
-        cancelButtonText: '取消'
-      }
-    )
-    
-    await authStore.logout()
-  } catch (error) {
-    // 用户取消操作
-  }
-}
-
 // 加载数据
 const loadDashboardData = async () => {
   loading.value = true
-  
-  try {
-    // 获取用户项目列表（真实API）
-    const projectsResponse = await projectAPI.getProjects()
-    const userProjects = projectsResponse.data.data
 
-    // 使用模拟数据作为基础，但替换项目数据
-    const mockData = mockDashboardData()
-    
-    // 更新真实的项目统计
-    mockData.stats.projectCount = userProjects.length
-    mockData.recentProjects = userProjects.slice(0, 4).map(project => ({
-      id: project.id,
-      name: project.name,
-      description: project.description,
-      language: project.language,
-      members: [], // 暂时为空，可以后续扩展
-      updatedAt: project.updatedAt
-    }))
-    
-    dashboardData.value = mockData
-    
+  try {
+    const [projectsResponse, statsResponse] = await Promise.all([
+      projectAPI.getProjects(),
+      projectAPI.getDashboardStats()
+    ])
+    const userProjects = projectsResponse.data.data
+    const stats = statsResponse.data.data
+
+    dashboardData.value = {
+      stats: {
+        projectCount: stats.projectCount,
+        collaborationCount: stats.collaborationCount,
+        fileCount: stats.fileCount
+      },
+      recentProjects: userProjects.slice(0, 4).map(project => ({
+        id: project.id,
+        name: project.name,
+        description: project.description,
+        language: project.language,
+        updatedAt: project.updatedAt
+      }))
+    }
+
   } catch (error: any) {
-    console.error('加载项目数据失败:', error)
-    
-    // API调用失败时使用完全模拟数据
-    ElMessage.warning('部分数据使用模拟数据显示')
-    dashboardData.value = mockDashboardData()
-    
+    console.error('加载数据失败:', error)
+    ElMessage.error('加载数据失败，请刷新重试')
   } finally {
     loading.value = false
   }
@@ -362,7 +266,7 @@ onMounted(() => {
 <style scoped>
 .dashboard {
   padding: 24px;
-  background-color: #f5f7fa;
+  background-color: var(--app-bg);
   min-height: calc(100vh - 48px);
 }
 
@@ -372,7 +276,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
-  background: white;
+  background: var(--sidebar-bg);
   padding: 24px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -485,11 +389,11 @@ onMounted(() => {
 
 .project-card {
   padding: 16px;
-  border: 1px solid #ebeef5;
+  border: 1px solid var(--sidebar-border);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
-  background: white;
+  background: var(--sidebar-bg);
 }
 
 .project-card:hover {
