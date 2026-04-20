@@ -61,13 +61,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // 允许的请求来源（开发环境 + 生产环境）
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:3000",     // React开发服务器（npm start）
-            "http://localhost:8090",     // Docker前端服务
-            "http://127.0.0.1:3000",     // 本地开发备用地址
-            "http://127.0.0.1:8090"      // Docker前端备用地址
-        ));
+        // 允许所有来源（通过gateway统一接入，无需限制具体端口）
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
         
         // 允许的HTTP请求方法
         configuration.setAllowedMethods(Arrays.asList(
