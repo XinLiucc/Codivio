@@ -1,0 +1,34 @@
+spring:
+  data:
+    redis:
+      host: redis
+      port: 6379
+      timeout: 5000ms
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.JvmMetricsAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.web.tomcat.TomcatMetricsAutoConfiguration
+
+logging:
+  level:
+    com.codivio.collaboration: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    enabled: false
+    enable:
+      process: false
+      system: false
+      jvm: false
+    export:
+      defaults:
+        enabled: false
